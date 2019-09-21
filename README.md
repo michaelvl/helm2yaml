@@ -4,7 +4,7 @@ This tool reads [Helmsman](https://github.com/Praqma/helmsman) and
 [FluxCD](https://fluxcd.io/) Kubernetes applications specs and allows for
 running Helm2/Helm3 to to deploy applications to Kubernetes or, alternatively,
 to render the resulting application YAML. The latter allows for keeping an audit
-trail on the actual YAMl deployed to Kubernetes.
+trail on the actual YAML deployed to Kubernetes.
 
 The following Helmsman command:
 
