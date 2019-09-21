@@ -2,7 +2,7 @@
 
 This tool reads [Helmsman](https://github.com/Praqma/helmsman) and
 [FluxCD](https://fluxcd.io/) Kubernetes applications specs and allows for
-running Helm2/Helm3 them to deploy applications to Kubernetes or, alterntively,
+running Helm2/Helm3 to to deploy applications to Kubernetes or, alternatively,
 to render the resulting application YAML. The latter allows for keeping an audit
 trail on the actual YAMl deployed to Kubernetes.
 
@@ -51,7 +51,7 @@ trail.
 Using `--apply` with helm-up (not to be confused with the second `--apply` shown
 above after the `helmsman` sub-command, which is only there to be drop-in
 compatible with Helmsman) will run helm to apply the application spec to a
-Kubernetes cluster. To use an alterntaive Helm command, e.g. helm3, one could
+Kubernetes cluster. To use an alternative Helm command, e.g. helm3, one could
 specify the Helm command as follows:
 
 ```
