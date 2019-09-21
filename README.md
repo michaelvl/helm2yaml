@@ -24,7 +24,7 @@ variable as follows:
 
 ```
 HELMSMAN=helmsman
-$HELMSMAN --appl -f my-app.yaml
+$HELMSMAN --apply -f my-app.yaml
 ```
 
 Replacing helmsman can then be done by changing the `HELMSMAN` env variable with:
@@ -45,3 +45,15 @@ and here `final-app.yaml` could be retained for the audit trail.  If the final
 YAML is retained in e.g. git, the `kubectl apply` command could be replaced by
 deployment on Kubernetes with Flux in a non-Helm mode, i.e. GitOps with an audit
 trail.
+
+### Using Helm3
+
+Using `--apply` with helm-up (not to be confused with the second `--apply` shown
+above after the `helmsman` sub-command, which is only there to be drop-in
+compatible with Helmsman) will run helm to apply the application spec to a
+Kubernetes cluster. To use an alterntaive Helm command, e.g. helm3, one could
+specify the Helm command as follows:
+
+```
+helm-up.py --apply -b ~/bin/helm3 helmsman -f my-app.yaml
+```
