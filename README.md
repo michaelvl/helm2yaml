@@ -2,7 +2,7 @@
 
 This tool reads [Helmsman](https://github.com/Praqma/helmsman) and
 [FluxCD](https://fluxcd.io/) Kubernetes applications specs and allows for
-running Helm2/Helm3 to to deploy applications to Kubernetes or, alternatively,
+running Helm2 or Helm3 to to deploy applications to Kubernetes or, alternatively,
 to render the resulting application YAML. The latter allows for keeping an audit
 trail on the actual YAML deployed to Kubernetes.
 
@@ -19,7 +19,7 @@ helm-up.py --apply helmsman --apply -f my-app.yaml
 ```
 
 The tool helm-up is deliberately made Helmsman compatible, i.e. deployment
-scripts could have the helmsman program specified through an environment
+scripts could have the helmsman binary specified through an environment
 variable as follows:
 
 ```
@@ -43,13 +43,20 @@ cluster and this YAML is not retained in any other places than in the cluster.
 For exactly the same reasons as why we build containers, the resulting YAMl
 should be retained as an artifact such that we both have an audit trail for what
 was actually deployed and such that we can be sure we can re-deploy the
-application without having to run Helm once more.
+application without having to re-run Helm to re-render the YAML.
 
 With the helm-up tool, the final YAML can be retained by using the `--render-to`
 argument as follows:
 
 ```
-helm-up.py --render-to final-app.yaml helmsman -f my-app.yaml
+helm-up.py --render-to final-app.yaml helmsman -f helmsman-app-spec.yaml
+kubectl apply -f final-app.yaml
+```
+
+Similarly wuth Flux application specs:
+
+```
+helm-up.py --render-to final-app.yaml fluxcd -f fluxcd-app-spec.yaml
 kubectl apply -f final-app.yaml
 ```
 
@@ -57,6 +64,10 @@ and here `final-app.yaml` could be retained for the audit trail.  If the final
 YAML is retained in e.g. git, the `kubectl apply` command could be replaced by
 deployment on Kubernetes with Flux in a non-Helm mode, i.e. GitOps with an audit
 trail.
+
+A GitOps pipeline example is shown below:
+
+![GitOps pipelines](doc/gitops.png)
 
 ### YAML Audit
 
@@ -90,3 +101,9 @@ specify the Helm command as follows:
 helm-up.py --apply -b ~/bin/helm3 helmsman -f my-app.yaml
 ```
 
+### Notes
+
+`helm template` ignores namespace, i.e. the namespace is not included in the rendered YAML.
+
+Helm2 does not accept repository on the `template` action, i.e. it is generally
+recommended to use helm3.
