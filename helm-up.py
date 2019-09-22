@@ -30,6 +30,8 @@ def parse_helmsman(fname):
     specs = []
     repo = {}
     dirname = os.path.dirname(fname)
+    if dirname == '':
+        dirname = '.'
     logging.debug("Loading Helmsman spec '{}'. Dirname '{}'".format(fname, dirname))
     with open(fname, 'r') as fs:
         apps = yaml.load(fs)
@@ -97,7 +99,7 @@ def run_helm(specs, args):
             with open('{}/{}'.format(tmpdir, vf), 'w') as vfn_dst:
                 with open('{}/{}'.format(app['dirname'], vf), 'r') as vfn_src:
                     src = vfn_src.read()
-                    dst = string.Template(src).substitute(os.environ)
+                    dst = string.Template(src).safe_substitute(os.environ)
                     logging.debug('Env expanded values: {}'.format(dst))
                     vfn_dst.write(dst)
             cmd += ' --values {}/{}'.format(tmpdir, vf)
