@@ -44,12 +44,12 @@ def parse_helmsman(fname):
                 if chart_repo not in repos:
                     raise ParseError("Repo '{}' not found".format(chart_repo))
                 repo = repos[chart_repo]
-                new_app = {'rel_name':  app_name,
-                           'namespace': app['namespace'],
-                           'repo':      repo,
-                           'chart':     app['chart'].split('/')[1],
-                           'version':   app['version'],
-                           'dirname':   dirname
+                new_app = {'rel_name':   app_name,
+                           'namespace':  app['namespace'],
+                           'repository': repo,
+                           'chart':      app['chart'].split('/')[1],
+                           'version':    app['version'],
+                           'dirname':    dirname
                 }
                 new_app['set'] = app.get('set', dict())
                 new_app['valuesfiles'] = app.get('valuesFiles', [])
@@ -67,9 +67,7 @@ def parse_flux(fname):
         chart = spec['chart']
         new_app = {'rel_name':  spec['releaseName'],
                    'namespace': meta['namespace'],
-                   #'repo':      repo,
-                   #'chart':     app['chart'].split('/')[1],
-                   #'version':   app['version'],
+                   'valuesfiles': []
         }
         chart_keys = ['repository', 'name',  'version']
         new_keys =   ['repository', 'chart', 'version']
@@ -87,7 +85,7 @@ def run_helm(specs, args):
     for app in specs:
         # Render-to overrides apply
         if args.render_to:
-            cmd = '{} template --namespace {} --repo {} {} {}'.format(helm_bin, app['namespace'], app['repo'], app['rel_name'], app['chart'])
+            cmd = '{} template --namespace {} --repo {} {} {}'.format(helm_bin, app['namespace'], app['repository'], app['rel_name'], app['chart'])
         elif args.apply:
             cmd = '{} upgrade --install --namespace {} --repo {} {} {}'.format(helm_bin, app['namespace'], app['repo'], app['rel_name'], app['chart'])
         for k,v in app['set'].items():
