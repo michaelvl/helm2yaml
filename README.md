@@ -33,8 +33,20 @@ Replacing helmsman can then be done by changing the `HELMSMAN` env variable with
 HELMSMAN='helm-up.py --apply helmsman'
 ```
 
-If one desires an audit trail for application deployment, the final YAML can be
-retained by using the `--render-to` argument as follows:
+### GitOps
+
+While using Helm to deploy applications directly onto a Kubernetes cluster is
+very common it is also a cloud-native anti-pattern IMHO. Using Helm this way
+means that Helm on-the-fly renders the final YAML which are deployed to the
+cluster and this YAML is not retained in any other places than in the cluster.
+
+For exactly the same reasons as why we build containers, the resulting YAMl
+should be retained as an artifact such that we both have an audit trail for what
+was actually deployed and such that we can be sure we can re-deploy the
+application without having to run Helm once more.
+
+With the helm-up tool, the final YAML can be retained by using the `--render-to`
+argument as follows:
 
 ```
 helm-up.py --render-to final-app.yaml helmsman -f my-app.yaml
@@ -45,6 +57,26 @@ and here `final-app.yaml` could be retained for the audit trail.  If the final
 YAML is retained in e.g. git, the `kubectl apply` command could be replaced by
 deployment on Kubernetes with Flux in a non-Helm mode, i.e. GitOps with an audit
 trail.
+
+### YAML Audit
+
+Before the final YAML is deployed to a Kubernetes cluster, it can be validated
+using e.g. [kubeaudit](https://github.com/Shopify/kubeaudit). E.g.
+
+```
+# First render the final YAML based on a Helmsman application spec
+./helm-up.py --apply --render-to prometheus-final.yaml -b ~/bin/helm3 helmsman -f examples/prometheus.yaml
+# Then run kubeaudit to validate the YAML
+kubeaudit nonroot -v ERROR -f prometheus-final.yaml
+```
+
+This will produce errors like the following:
+
+```
+ERRO[0000] RunAsNonRoot is not set in ContainerSecurityContext, which results in root user being allowed!
+```
+
+which can be used to fail the GitOps pipeline for the application deployment.
 
 ### Using Helm3
 
@@ -57,3 +89,4 @@ specify the Helm command as follows:
 ```
 helm-up.py --apply -b ~/bin/helm3 helmsman -f my-app.yaml
 ```
+
