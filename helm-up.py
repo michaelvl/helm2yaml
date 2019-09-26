@@ -87,10 +87,10 @@ def run_helm(specs, args):
         if args.render_to:
             cmd = '{} template --namespace {} --repo {} {} {}'.format(helm_bin, app['namespace'], app['repository'], app['rel_name'], app['chart'])
         elif args.apply:
-            cmd = '{} upgrade --install --namespace {} --repo {} {} {}'.format(helm_bin, app['namespace'], app['repo'], app['rel_name'], app['chart'])
+            cmd = '{} upgrade --install --namespace {} --repo {} {} {}'.format(helm_bin, app['namespace'], app['repository'], app['rel_name'], app['chart'])
         for k,v in app['set'].items():
             if type(v) is str:
-                cmd += ' --set {}={}'.format(k,string.Template(v).substitute(os.environ))
+                cmd += ' --set {}={}'.format(k,string.Template(v).safe_substitute(os.environ))
             else:
                 cmd += ' --set {}={}'.format(k,v)
         for vf in app['valuesfiles']:
