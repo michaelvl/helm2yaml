@@ -155,6 +155,9 @@ def main():
 
     logging.debug('Env variables: {}'.format(pprint.pformat(os.environ)))
 
+    if not hasattr(args, 'func'):
+        parser.print_help()
+        return -1
     return args.func(args)
 
 if __name__ == "__main__":
