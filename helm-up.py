@@ -34,7 +34,7 @@ def parse_helmsman(fname):
         dirname = '.'
     logging.debug("Loading Helmsman spec '{}'. Dirname '{}'".format(fname, dirname))
     with open(fname, 'r') as fs:
-        apps = yaml.load(fs)
+        apps = yaml.load(fs, Loader=yaml.FullLoader)
         repos = apps.get('helmRepos', dict())
         if 'apps' in apps:
             for app_name in apps['apps'].keys():
