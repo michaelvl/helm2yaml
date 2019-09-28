@@ -78,6 +78,19 @@ def parse_flux(fname):
         specs.append(new_app)
     return specs
 
+def get_extras(args, app):
+    if args.create_namespace:
+        return '''
+# Source: Created due to --create-namespace argument
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {name}
+---
+'''.format(name=app['namespace'])
+    else:
+        return ''
+
 def run_helm(specs, args):
     helm_bin = args.helm_bin
     tmpdir = tempfile.mkdtemp()
@@ -106,6 +119,7 @@ def run_helm(specs, args):
         # Render-to overrides apply
         if args.render_to:
             with fopener(args.render_to) as fh:
+                print(get_extras(args, app), file=fh)
                 print(out.decode('UTF-8','ignore'), file=fh)
         elif args.apply:
             for ln in out.split(b'\n'):
@@ -136,6 +150,8 @@ def main():
     parser.add_argument('--render-to', default=None)
     parser.add_argument('-b', dest='helm_bin', default='helm')
     parser.add_argument('--apply', default=False, action='store_true')
+    parser.add_argument('--create-namespace', default=False, action='store_true',
+                        help='Create Namespace resource (implicitly in Helm)')
 
     subparsers = parser.add_subparsers()
     parser_helmsman = subparsers.add_parser('helmsman')
