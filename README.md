@@ -103,7 +103,12 @@ helm-up.py --apply -b ~/bin/helm3 helmsman -f my-app.yaml
 
 ### Notes
 
-`helm template` ignores namespace, i.e. the namespace is not included in the rendered YAML.
+`helm template` ignores namespace, i.e. the namespace is not included in the
+rendered YAML. To include a namespace resource, use the `--create-namespace`
+argument.  Applying rendered YAML with `kubectl` should use an explicit
+namespace argument. Charts that create resources in multiple namespaces may be
+problematic - see [Helm issue
+1744](https://github.com/jetstack/cert-manager/issues/1744)
 
 Helm2 does not accept repository on the `template` action, i.e. it is generally
 recommended to use helm3.
