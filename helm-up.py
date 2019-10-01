@@ -78,7 +78,7 @@ def parse_flux(fname):
         specs.append(new_app)
     return specs
 
-def get_extras(args, app):
+def get_extras_resources(args, app):
     if args.create_namespace:
         return '''
 # Source: Created due to --create-namespace argument
@@ -119,7 +119,7 @@ def run_helm(specs, args):
         # Render-to overrides apply
         if args.render_to:
             with fopener(args.render_to) as fh:
-                print(get_extras(args, app), file=fh)
+                print(get_extras_resources(args, app), file=fh)
                 print(out.decode('UTF-8','ignore'), file=fh)
         elif args.apply:
             for ln in out.split(b'\n'):
