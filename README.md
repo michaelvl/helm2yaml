@@ -40,7 +40,7 @@ very common it is also a cloud-native anti-pattern IMHO. Using Helm this way
 means that Helm on-the-fly renders the final YAML which are deployed to the
 cluster and this YAML is not retained in any other places than in the cluster.
 
-For exactly the same reasons as why we build containers, the resulting YAMl
+For exactly the same reasons as why we build containers, the resulting YAML
 should be retained as an artifact such that we both have an audit trail for what
 was actually deployed and such that we can be sure we can re-deploy the
 application without having to re-run Helm to re-render the YAML.
