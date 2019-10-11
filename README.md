@@ -112,3 +112,10 @@ problematic - see [Helm issue
 
 Helm2 does not accept repository on the `template` action, i.e. it is generally
 recommended to use helm3.
+
+With Helm applying resources to Kubernetes, a full diff will be applied
+according to the deployed chart, i.e. if subsequent versions of a chart remove
+resources, these will be deleted from Kubernetes. A render-and-run-kubectl
+approach will not.
+
+Dependencies (requirements.yaml in a chart) are handled properly.
