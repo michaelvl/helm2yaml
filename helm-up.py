@@ -106,7 +106,7 @@ def run_helm(specs, args):
     for app in specs:
         helm_fetch_chart(app, args, tmpdir)
         if args.render_to:
-            cmd = '{} template {}/charts/{}'.format(args.helm_bin, tmpdir, app['chart'])
+            cmd = '{} template --kube-version {} {}/charts/{}'.format(args.helm_bin, args.kube_version, tmpdir, app['chart'])
         elif args.apply:
             cmd = '{} upgrade --install --namespace {} --repo {} {} {}'.format(args.helm_bin, app['namespace'], app['repository'], app['rel_name'], app['chart'])
         for k,v in app['set'].items():
@@ -157,6 +157,7 @@ def main():
                         help='Set the log level')
     parser.add_argument('--render-to', default=None)
     parser.add_argument('-b', dest='helm_bin', default='helm')
+    parser.add_argument('--kube-version', default='1.16')
     parser.add_argument('--apply', default=False, action='store_true')
     parser.add_argument('--create-namespace', default=False, action='store_true',
                         help='Create Namespace resource (implicitly in Helm)')
