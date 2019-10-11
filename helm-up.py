@@ -78,6 +78,13 @@ def parse_flux(fname):
         specs.append(new_app)
     return specs
 
+# Particularly needed for Helm2 which do not have a --repo argument on 'template'
+def helm_fetch_chart(app, args, tmpdir):
+    logging.debug("Using temp dir: '{}'".format(tmpdir))
+    cmd = '{} fetch --untar --untardir {}/charts --repo {} --version {} {}'.format(args.helm_bin, tmpdir, app['repository'], app['version'], app['chart'])
+    logging.debug('Helm command: {}'.format(cmd))
+    out = subprocess.check_output(cmd, shell=True)
+
 def get_extras_resources(args, app):
     if args.create_namespace:
         return '''
@@ -92,15 +99,16 @@ metadata:
         return ''
 
 def run_helm(specs, args):
-    helm_bin = args.helm_bin
+    subprocess.check_output('helm init --client-only', shell=True)
+
     tmpdir = tempfile.mkdtemp()
     logging.debug("Using temp dir: '{}'".format(tmpdir))
     for app in specs:
-        # Render-to overrides apply
+        helm_fetch_chart(app, args, tmpdir)
         if args.render_to:
-            cmd = '{} template --namespace {} --repo {} {} {}'.format(helm_bin, app['namespace'], app['repository'], app['rel_name'], app['chart'])
+            cmd = '{} template {}/charts/{}'.format(args.helm_bin, tmpdir, app['chart'])
         elif args.apply:
-            cmd = '{} upgrade --install --namespace {} --repo {} {} {}'.format(helm_bin, app['namespace'], app['repository'], app['rel_name'], app['chart'])
+            cmd = '{} upgrade --install --namespace {} --repo {} {} {}'.format(args.helm_bin, app['namespace'], app['repository'], app['rel_name'], app['chart'])
         for k,v in app['set'].items():
             if type(v) is str:
                 cmd += ' --set {}={}'.format(k,string.Template(v).safe_substitute(os.environ))
