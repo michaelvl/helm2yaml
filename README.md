@@ -15,10 +15,10 @@ helmsman --apply -f my-app.yaml
 can be replaced by:
 
 ```
-helm-up.py --apply helmsman --apply -f my-app.yaml
+helm2yaml.py --apply helmsman --apply -f my-app.yaml
 ```
 
-The tool helm-up is deliberately made Helmsman compatible, i.e. deployment
+The tool helm2yaml is deliberately made Helmsman compatible, i.e. deployment
 scripts could have the helmsman binary specified through an environment
 variable as follows:
 
@@ -30,7 +30,7 @@ $HELMSMAN --apply -f my-app.yaml
 Replacing helmsman can then be done by changing the `HELMSMAN` env variable with:
 
 ```
-HELMSMAN='helm-up.py --apply helmsman'
+HELMSMAN='helm2yaml.py --apply helmsman'
 ```
 
 ### GitOps
@@ -45,18 +45,18 @@ should be retained as an artifact such that we both have an audit trail for what
 was actually deployed and such that we can be sure we can re-deploy the
 application without having to re-run Helm to re-render the YAML.
 
-With the helm-up tool, the final YAML can be retained by using the `--render-to`
+With the helm2yaml tool, the final YAML can be retained by using the `--render-to`
 argument as follows:
 
 ```
-helm-up.py --render-to final-app.yaml helmsman -f helmsman-app-spec.yaml
+helm2yaml.py --render-to final-app.yaml helmsman -f helmsman-app-spec.yaml
 kubectl apply -f final-app.yaml
 ```
 
 Similarly wuth Flux application specs:
 
 ```
-helm-up.py --render-to final-app.yaml fluxcd -f fluxcd-app-spec.yaml
+helm2yaml.py --render-to final-app.yaml fluxcd -f fluxcd-app-spec.yaml
 kubectl apply -f final-app.yaml
 ```
 
@@ -76,7 +76,7 @@ using e.g. [kubeaudit](https://github.com/Shopify/kubeaudit). E.g.
 
 ```
 # First render the final YAML based on a Helmsman application spec
-./helm-up.py --apply --render-to prometheus-final.yaml -b ~/bin/helm3 helmsman -f examples/prometheus.yaml
+./helm2yaml.py --apply --render-to prometheus-final.yaml -b ~/bin/helm3 helmsman -f examples/prometheus.yaml
 # Then run kubeaudit to validate the YAML
 kubeaudit nonroot -v ERROR -f prometheus-final.yaml
 ```
@@ -91,15 +91,20 @@ which can be used to fail the GitOps pipeline for the application deployment.
 
 ### Using Helm3
 
-Using `--apply` with helm-up (not to be confused with the second `--apply` shown
+Using `--apply` with helm2yaml (not to be confused with the second `--apply` shown
 above after the `helmsman` sub-command, which is only there to be drop-in
 compatible with Helmsman) will run helm to apply the application spec to a
 Kubernetes cluster. To use an alternative Helm command, e.g. helm3, one could
 specify the Helm command as follows:
 
 ```
-helm-up.py --apply -b ~/bin/helm3 helmsman -f my-app.yaml
+helm2yaml.py --apply -b ~/bin/helm3 helmsman -f my-app.yaml
 ```
+
+### Running from a Container
+
+The helm2yaml tool is available as a container, e.g. see the `helmsman.sh`
+Helmsman-replacement script.
 
 ### Notes
 
