@@ -9,7 +9,7 @@ RUN pip install -r ./requirements.txt
 RUN curl -sLO https://get.helm.sh/helm-v2.14.3-linux-amd64.tar.gz && tar -xzf helm-v2.14.3-linux-amd64.tar.gz && mv linux-amd64/helm /usr/local/bin/helm2 && chmod +x /usr/local/bin/helm2 && rm -rf helm-v2.14.3-linux-amd64.tar.gz linux-amd64
 
 # Helm 3
-RUN curl -sLO https://get.helm.sh/helm-v3.0.0-beta.2-linux-amd64.tar.gz && tar -xzf helm-v3.0.0-beta.2-linux-amd64.tar.gz && mv linux-amd64/helm /usr/local/bin/helm && chmod +x /usr/local/bin/helm && rm -rf helm-v3.0.0-beta.2-linux-amd64.tar.gz linux-amd64
+RUN curl -sLO https://get.helm.sh/helm-v3.0.0-beta.4-linux-amd64.tar.gz && tar -xzf helm-v3.0.0-beta.4-linux-amd64.tar.gz && mv linux-amd64/helm /usr/local/bin/helm && chmod +x /usr/local/bin/helm && rm -rf helm-v3.0.0-beta.4-linux-amd64.tar.gz linux-amd64
 
 RUN mkdir -p /bin /rendered
 WORKDIR "/src"
