@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys, os
-import string
+import string, io
 import argparse
 import subprocess
 import yaml
@@ -106,7 +106,12 @@ def run_helm(specs, args):
     for app in specs:
         helm_fetch_chart(app, args, tmpdir)
         if args.render_to:
-            cmd = '{} template --kube-version {} {}/charts/{}'.format(args.helm_bin, args.kube_version, tmpdir, app['chart'])
+            cmd = '{} template --namespace {}'.format(args.helm_bin, app['namespace'])
+            if args.kube_version:
+                cmd += ' --kube-version {} {}/charts/{}'.format(args.kube_version)
+            else:
+                cmd += ' --api-versions {}'.format(args.api_versions)
+            cmd += ' {}/charts/{}'.format(tmpdir, app['chart'])
         elif args.apply:
             cmd = '{} upgrade --install --namespace {} --repo {} {} {}'.format(args.helm_bin, app['namespace'], app['repository'], app['rel_name'], app['chart'])
         for k,v in app['set'].items():
@@ -124,11 +129,12 @@ def run_helm(specs, args):
             cmd += ' --values {}/{}'.format(tmpdir, vf)
         logging.debug('Helm command: {}'.format(cmd))
         out = subprocess.check_output(cmd, shell=True)
+        out = out.decode('UTF-8','ignore')
         # Render-to overrides apply
         if args.render_to:
             with fopener(args.render_to) as fh:
                 print(get_extras_resources(args, app), file=fh)
-                print(out.decode('UTF-8','ignore'), file=fh)
+                print(out, file=fh)
         elif args.apply:
             for ln in out.split(b'\n'):
                 logging.info(str(ln))
@@ -157,7 +163,8 @@ def main():
                         help='Set the log level')
     parser.add_argument('--render-to', default=None)
     parser.add_argument('-b', dest='helm_bin', default='helm')
-    parser.add_argument('--kube-version', default='1.16')
+    parser.add_argument('--kube-version', default=None)
+    parser.add_argument('--api-versions', default=None)
     parser.add_argument('--apply', default=False, action='store_true')
     parser.add_argument('--create-namespace', default=False, action='store_true',
                         help='Create Namespace resource (implicitly in Helm)')
