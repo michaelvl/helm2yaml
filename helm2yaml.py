@@ -99,7 +99,7 @@ metadata:
         return ''
 
 def run_helm(specs, args):
-    subprocess.check_output('helm init --client-only', shell=True)
+    subprocess.check_output('helm init {}'.format(args.helm_init_args), shell=True)
 
     tmpdir = tempfile.mkdtemp()
     logging.debug("Using temp dir: '{}'".format(tmpdir))
@@ -163,6 +163,7 @@ def main():
                         help='Set the log level')
     parser.add_argument('--render-to', default=None)
     parser.add_argument('-b', dest='helm_bin', default='helm')
+    parser.add_argument('--helm-init-args', default='')
     parser.add_argument('--kube-version', default=None)
     parser.add_argument('--api-versions', default=None)
     parser.add_argument('--apply', default=False, action='store_true')
