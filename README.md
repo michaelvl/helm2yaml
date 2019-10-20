@@ -145,8 +145,8 @@ Helmsman-replacement script.
 rendered YAML. To include a namespace resource, use the `--render-namespace-to`
 argument.  Applying rendered YAML with `kubectl` should use an explicit
 namespace argument - see the `helmsman.sh` Helmsman-replacement script for an
-example. Charts that create resources in multiple namespaces may be problematic
-- see e.g. [Helm issue
+example. Charts that create resources in multiple namespaces may be problematic,
+see e.g. [Helm issue
 1744](https://github.com/jetstack/cert-manager/issues/1744). Luckily such charts
 are rare - known examples are `cert-manager` and `metrics-server`.
 
