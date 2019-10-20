@@ -1,10 +1,22 @@
 ## Kubernetes application deployment utilities
 
-This tool reads [Helmsman](https://github.com/Praqma/helmsman) and
+This repository contain tools for implementatin GitOps with Helm.
+
+With `helm install` the Kubernetes resource YAML is not retained outside of
+Kubernetes. This is an anti-pattern in CI/CD, where we strive to separate the
+application building, packaging and running stages.  With Helm-based GitOps we
+should consider the Helm-to-YAML process as a separate process from the actual
+deployment. The YAML resulting from running `helm install` is the result of the
+helm chart version, the Kubernetes API capabilities, whether the chart was
+installed already and the values we specify for the configuration. With all
+these moving parts, the resulting YAML should be retained similarly to how we
+retain the binary artifact from source-code compilation.
+
+The `helm2yaml` tool reads [Helmsman](https://github.com/Praqma/helmsman) and
 [FluxCD](https://fluxcd.io/) Kubernetes applications specs and allows for
-running Helm2 or Helm3 to to deploy applications to Kubernetes or, alternatively,
-to render the resulting application YAML. The latter allows for keeping an audit
-trail on the actual YAML deployed to Kubernetes.
+running Helm2 or Helm3 to render the resulting application Kubernetes resource
+YAMLs. This allows for keeping an audit trail on the actual YAML deployed
+to Kubernetes.
 
 The following Helmsman command:
 
