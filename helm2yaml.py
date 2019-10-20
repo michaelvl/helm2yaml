@@ -43,6 +43,9 @@ def parse_helmsman(fname):
                 chart_repo = app['chart'].split('/')[0]
                 if chart_repo not in repos:
                     raise ParseError("Repo '{}' not found".format(chart_repo))
+                if not app['enabled']:
+                    logging.info('Skiping disabled deployment {}'.format(app_name))
+                    continue
                 repo = repos[chart_repo]
                 new_app = {'rel_name':   app_name,
                            'namespace':  app['namespace'],
@@ -85,18 +88,13 @@ def helm_fetch_chart(app, args, tmpdir):
     logging.debug('Helm command: {}'.format(cmd))
     out = subprocess.check_output(cmd, shell=True)
 
-def get_extras_resources(args, app):
-    if args.create_namespace:
-        return '''
-# Source: Created due to --create-namespace argument
+def get_namespace_resource(args, app):
+    return '''
 apiVersion: v1
 kind: Namespace
 metadata:
   name: {name}
----
 '''.format(name=app['namespace'])
-    else:
-        return ''
 
 def run_helm(specs, args):
     subprocess.check_output('helm init {}'.format(args.helm_init_args), shell=True)
@@ -105,15 +103,11 @@ def run_helm(specs, args):
     logging.debug("Using temp dir: '{}'".format(tmpdir))
     for app in specs:
         helm_fetch_chart(app, args, tmpdir)
-        if args.render_to:
-            cmd = '{} template --namespace {}'.format(args.helm_bin, app['namespace'])
-            if args.kube_version:
-                cmd += ' --kube-version {} {}/charts/{}'.format(args.kube_version)
-            else:
-                cmd += ' --api-versions {}'.format(args.api_versions)
-            cmd += ' {}/charts/{}'.format(tmpdir, app['chart'])
-        elif args.apply:
-            cmd = '{} upgrade --install --namespace {} --repo {} {} {}'.format(args.helm_bin, app['namespace'], app['repository'], app['rel_name'], app['chart'])
+        cmd = '{} --debug template {} --namespace {}'.format(args.helm_bin, app['rel_name'], app['namespace'])
+        if args.kube_version:
+            cmd += ' --kube-version {} {}/charts/{}'.format(args.kube_version)
+        for apiver in args.api_versions:
+            cmd += ' --api-versions {}'.format(apiver)
         for k,v in app['set'].items():
             if type(v) is str:
                 cmd += ' --set {}={}'.format(k,string.Template(v).safe_substitute(os.environ))
@@ -127,24 +121,23 @@ def run_helm(specs, args):
                     logging.debug('Env expanded values: {}'.format(dst))
                     vfn_dst.write(dst)
             cmd += ' --values {}/{}'.format(tmpdir, vf)
+        cmd += ' {}/charts/{}'.format(tmpdir, app['chart'])
         logging.debug('Helm command: {}'.format(cmd))
         out = subprocess.check_output(cmd, shell=True)
         out = out.decode('UTF-8','ignore')
-        # Render-to overrides apply
         if args.render_to:
             with fopener(args.render_to) as fh:
-                print(get_extras_resources(args, app), file=fh)
                 print(out, file=fh)
-        elif args.apply:
-            for ln in out.split(b'\n'):
-                logging.info(str(ln))
+        if args.render_namespace_to:
+            with fopener(args.render_namespace_to) as fh:
+                print(get_namespace_resource(args, app), file=fh)
 
 def do_helmsman(args):
     logging.debug('Helmsman spec files: {}'.format(args.helmsman))
     for fn in args.helmsman:
         specs = parse_helmsman(fn)
         logging.debug('Parsed Helmsman spec: {}'.format(pprint.pformat(specs)))
-        if args.apply or args.render_to:
+        if args.render_to:
             run_helm(specs, args)
 
 def do_flux(args):
@@ -152,7 +145,7 @@ def do_flux(args):
     for fn in args.flux:
         specs = parse_flux(fn)
         logging.debug('Parsed Flux spec: {}'.format(pprint.pformat(specs)))
-        if args.apply or args.render_to:
+        if args.render_to:
             run_helm(specs, args)
 
 
@@ -165,10 +158,9 @@ def main():
     parser.add_argument('-b', dest='helm_bin', default='helm')
     parser.add_argument('--helm-init-args', default='')
     parser.add_argument('--kube-version', default=None)
-    parser.add_argument('--api-versions', default=None)
-    parser.add_argument('--apply', default=False, action='store_true')
-    parser.add_argument('--create-namespace', default=False, action='store_true',
-                        help='Create Namespace resource (implicitly in Helm)')
+    parser.add_argument('--api-versions', default=[], action='append')
+    parser.add_argument('--render-namespace-to', default=None,
+                        help='Render Namespace resource (implicitly in Helm)')
 
     subparsers = parser.add_subparsers()
     parser_helmsman = subparsers.add_parser('helmsman')
