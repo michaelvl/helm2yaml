@@ -13,7 +13,7 @@ RUN curl -sLO https://get.helm.sh/helm-v3.0.0-beta.4-linux-amd64.tar.gz && tar -
 
 RUN mkdir -p /bin /rendered
 WORKDIR "/src"
-COPY helm2yaml.py /bin/
+COPY helm2yaml.py k8envsubst.py /bin/
 
 ENTRYPOINT ["/bin/helm2yaml.py"]
 CMD ["--help"]
