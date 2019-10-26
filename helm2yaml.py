@@ -81,6 +81,40 @@ def parse_flux(fname):
         specs.append(new_app)
     return specs
 
+def yaml2dict(app):
+    res_out = []
+    for res in app.split('---\n'):
+        res = string.Template(res).safe_substitute(os.environ)
+        res = yaml.load(res, Loader=yaml.FullLoader)
+        if res:
+            res_out.append(res)
+    return res_out
+
+def list_images(app):
+    app = yaml2dict(app)
+    img_list = []
+    for res in app:
+        spec = None
+        if 'kind' in res and res['kind']=='Pod':
+            spec = res['spec']
+        if 'kind' in res and (res['kind']=='Deployment' or res['kind']=='Statefulset' or res['kind']=='Daemonset'):
+            spec = res['spec']['template']['spec']
+        containers = None
+        if spec:
+            containers = spec['containers']
+            if 'initContainers' in spec:
+                containers += spec['initContainers']
+        if containers:
+            logging.debug('Container list: {}'.format(containers))
+            imgs = [c['image'] for c in containers]
+            logging.debug('Images from {} {}: {}'.format(res['kind'], res['metadata']['name'], imgs))
+            img_list += imgs
+
+    img_list_set = set(img_list)
+    img_out = (list(img_list_set))
+    logging.debug('Images {}'.format(img_out))
+    return img_out
+
 # Particularly needed for Helm2 which do not have a --repo argument on 'template'
 def helm_fetch_chart(app, args, tmpdir):
     logging.debug("Using temp dir: '{}'".format(tmpdir))
@@ -101,6 +135,7 @@ def run_helm(specs, args):
 
     tmpdir = tempfile.mkdtemp()
     logging.debug("Using temp dir: '{}'".format(tmpdir))
+    apps = []
     for app in specs:
         helm_fetch_chart(app, args, tmpdir)
         cmd = '{} --debug template {} --namespace {}'.format(args.helm_bin, app['rel_name'], app['namespace'])
@@ -125,28 +160,28 @@ def run_helm(specs, args):
         logging.debug('Helm command: {}'.format(cmd))
         out = subprocess.check_output(cmd, shell=True)
         out = out.decode('UTF-8','ignore')
+        apps.append(out)
         if args.render_to:
             with fopener(args.render_to) as fh:
                 print(out, file=fh)
         if args.render_namespace_to:
             with fopener(args.render_namespace_to) as fh:
                 print(get_namespace_resource(args, app), file=fh)
+    return apps
 
 def do_helmsman(args):
     logging.debug('Helmsman spec files: {}'.format(args.helmsman))
     for fn in args.helmsman:
         specs = parse_helmsman(fn)
         logging.debug('Parsed Helmsman spec: {}'.format(pprint.pformat(specs)))
-        if args.render_to:
-            run_helm(specs, args)
+        return run_helm(specs, args)
 
 def do_flux(args):
     logging.debug('Flux spec files: {}'.format(args.flux))
     for fn in args.flux:
         specs = parse_flux(fn)
         logging.debug('Parsed Flux spec: {}'.format(pprint.pformat(specs)))
-        if args.render_to:
-            run_helm(specs, args)
+        return run_helm(specs, args)
 
 
 def main():
@@ -161,6 +196,7 @@ def main():
     parser.add_argument('--api-versions', default=[], action='append')
     parser.add_argument('--render-namespace-to', default=None,
                         help='Render Namespace resource (implicitly in Helm)')
+    parser.add_argument('--list-images', action='store_true')
 
     subparsers = parser.add_subparsers()
     parser_helmsman = subparsers.add_parser('helmsman')
@@ -183,7 +219,10 @@ def main():
     if not hasattr(args, 'func'):
         parser.print_help()
         return -1
-    return args.func(args)
+    apps = args.func(args)
+    if args.list_images and apps:
+        for app in apps:
+            list_images(app)
 
 if __name__ == "__main__":
    sys.exit(main())
