@@ -97,7 +97,7 @@ def list_images(app):
         spec = None
         if 'kind' in res and res['kind']=='Pod':
             spec = res['spec']
-        if 'kind' in res and (res['kind']=='Deployment' or res['kind']=='Statefulset' or res['kind']=='Daemonset'):
+        if 'kind' in res and (res['kind']=='Deployment' or res['kind']=='StatefulSet' or res['kind']=='DaemonSet'):
             spec = res['spec']['template']['spec']
         containers = None
         if spec:
