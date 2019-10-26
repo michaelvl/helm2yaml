@@ -34,7 +34,7 @@ def parse_helmsman(fname):
         dirname = '.'
     logging.debug("Loading Helmsman spec '{}'. Dirname '{}'".format(fname, dirname))
     with open(fname, 'r') as fs:
-        apps = yaml.load(fs, Loader=yaml.FullLoader)
+        apps = yaml.load(fs)#, Loader=yaml.FullLoader)
         repos = apps.get('helmRepos', dict())
         if 'apps' in apps:
             for app_name in apps['apps'].keys():
@@ -85,7 +85,7 @@ def yaml2dict(app):
     res_out = []
     for res in app.split('---\n'):
         res = string.Template(res).safe_substitute(os.environ)
-        res = yaml.load(res, Loader=yaml.FullLoader)
+        res = yaml.load(res)#, Loader=yaml.FullLoader)
         if res:
             res_out.append(res)
     return res_out
@@ -138,7 +138,7 @@ def run_helm(specs, args):
     apps = []
     for app in specs:
         helm_fetch_chart(app, args, tmpdir)
-        cmd = '{} --debug template {} --namespace {}'.format(args.helm_bin, app['rel_name'], app['namespace'])
+        cmd = '{} template {} --namespace {}'.format(args.helm_bin, app['rel_name'], app['namespace'])
         if args.kube_version:
             cmd += ' --kube-version {} {}/charts/{}'.format(args.kube_version)
         for apiver in args.api_versions:
@@ -222,7 +222,8 @@ def main():
     apps = args.func(args)
     if args.list_images and apps:
         for app in apps:
-            list_images(app)
+            imgs = list_images(app)
+            print("\n".join(imgs))
 
 if __name__ == "__main__":
    sys.exit(main())
