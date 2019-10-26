@@ -1,7 +1,7 @@
 #! /bin/bash
 
-#HELM2YAML='michaelvl/helm2yaml'
-HELM2YAML='helm2yaml'
+HELM2YAML='michaelvl/helm2yaml'
+#HELM2YAML='helm2yaml'
 
 set -xe
 
