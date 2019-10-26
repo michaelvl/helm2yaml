@@ -139,6 +139,11 @@ helm2yaml.py --apply -b ~/bin/helm3 helmsman -f my-app.yaml
 The helm2yaml tool is available as a container, e.g. see the `helmsman.sh`
 Helmsman-replacement script.
 
+### List Images
+
+The helm2yaml tool can also be used to list images used in a Helm chart to allow
+e.g. pre-pulling of images.  Use the `--list-images` option for this.
+
 ### Notes
 
 `helm template` ignores namespace, i.e. the namespace is not included in the
