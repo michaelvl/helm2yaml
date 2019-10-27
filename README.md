@@ -109,7 +109,7 @@ using e.g. [kubeaudit](https://github.com/Shopify/kubeaudit). E.g.
 
 ```
 # First render the final YAML based on a Helmsman application spec
-./helm2yaml.py --apply --render-to prometheus-final.yaml -b ~/bin/helm3 helmsman -f examples/prometheus.yaml
+./helm2yaml.py --render-to prometheus-final.yaml helmsman -f examples/prometheus.yaml
 # Then run kubeaudit to validate the YAML
 kubeaudit nonroot -v ERROR -f prometheus-final.yaml
 ```
