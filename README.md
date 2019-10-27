@@ -18,33 +18,6 @@ running Helm2 or Helm3 to render the resulting application Kubernetes resource
 YAMLs. This allows for keeping an audit trail on the actual YAML deployed
 to Kubernetes.
 
-The following Helmsman command:
-
-```
-helmsman --apply -f my-app.yaml
-```
-
-can be replaced by:
-
-```
-helm2yaml.py --apply helmsman --apply -f my-app.yaml
-```
-
-The tool helm2yaml is deliberately made Helmsman compatible, i.e. deployment
-scripts could have the helmsman binary specified through an environment
-variable as follows:
-
-```
-HELMSMAN=helmsman
-$HELMSMAN --apply -f my-app.yaml
-```
-
-Replacing helmsman can then be done by changing the `HELMSMAN` env variable with:
-
-```
-HELMSMAN='helm2yaml.py --apply helmsman'
-```
-
 ### GitOps
 
 While using Helm to deploy applications directly onto a Kubernetes cluster is
@@ -122,16 +95,13 @@ ERRO[0000] RunAsNonRoot is not set in ContainerSecurityContext, which results in
 
 which can be used to fail the GitOps pipeline for the application deployment.
 
-### Using Helm3
+### Using Other Helm Binaries
 
-Using `--apply` with helm2yaml (not to be confused with the second `--apply` shown
-above after the `helmsman` sub-command, which is only there to be drop-in
-compatible with Helmsman) will run helm to apply the application spec to a
-Kubernetes cluster. To use an alternative Helm command, e.g. helm3, one could
-specify the Helm command as follows:
+To use an alternative Helm binary, e.g. helm3, one could specify the Helm
+command as follows:
 
 ```
-helm2yaml.py --apply -b ~/bin/helm3 helmsman -f my-app.yaml
+helm2yaml.py -b ~/bin/helm3 helmsman -f my-app.yaml
 ```
 
 ### Running from a Container
