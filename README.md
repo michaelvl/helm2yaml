@@ -50,6 +50,23 @@ YAML is retained in e.g. git, the `kubectl apply` command could be replaced by
 deployment on Kubernetes with Flux in a non-Helm mode, i.e. GitOps with an audit
 trail.
 
+### Helmsman Replacement
+
+The script `helmsman.sh` is a script that implements some of the Helmsman
+functionality, i.e. Helmsman application installation can be immitated with `helm2yaml` and `kubectl`
+
+E.g.:
+
+```
+helmsman --apply -f app.yaml
+```
+
+can be replcaed with:
+
+```
+helmsman.sh --apply -f app.yaml
+```
+
 #### Handling Secrets
 
 If the application deployment contains secrets which should not be included in
