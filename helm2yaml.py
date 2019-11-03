@@ -154,7 +154,9 @@ def resource_filter(res, args):
                 out.append(r)
             else:
                 logging.info('Filtering resource {}/{}'.format(r['kind'], r['metadata']['name']))
-    return res
+    else:
+        return res
+    return out
 
 def run_helm(specs, args):
     subprocess.check_output('helm init {}'.format(args.helm_init_args), shell=True)
@@ -191,7 +193,9 @@ def run_helm(specs, args):
         apps.append(res)
         if args.render_to:
             with fopener(args.render_to) as fh:
-                print(out, file=fh)
+                for r in res:
+                    print(yaml.dump(r), file=fh)
+                    print('---', file=fh)
         if args.render_namespace_to:
             with fopener(args.render_namespace_to) as fh:
                 print(get_namespace_resource(args, app), file=fh)

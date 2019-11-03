@@ -67,6 +67,9 @@ can be replcaed with:
 helmsman.sh --apply -f app.yaml
 ```
 
+Note that `helmsman.sh` use a Helm hook filter to only render ordinary resources
+and ignore e.g. test resources etc. See notes on hooks below.
+
 #### Handling Secrets
 
 If the application deployment contains secrets which should not be included in
