@@ -14,4 +14,4 @@ kubectl apply -f rendered/ns.yaml
 NS=$(yq -r '.metadata.name' rendered/ns.yaml)
 
 # The environment variables shown here are usefull for deployment of e.g. https://github.com/MichaelVL/kubernetes-infra-cloudimg
-cat rendered/out.yaml | docker run -i --entrypoint /bin/k8envsubst.py -e GRAFANA_ADMIN_PASSWD -e DNS_DOMAIN -e NFS_STORAGE_PROVISIONER_HOSTNAME $HELM2YAML | kubectl -n $NS apply -f -
+cat rendered/out.yaml | docker run --rm -i --entrypoint /bin/k8envsubst.py -e GRAFANA_ADMIN_PASSWD -e DNS_DOMAIN -e NFS_STORAGE_PROVISIONER_HOSTNAME $HELM2YAML | kubectl -n $NS apply -f -
