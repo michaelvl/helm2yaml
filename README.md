@@ -131,6 +131,17 @@ Helmsman-replacement script.
 The helm2yaml tool can also be used to list images used in a Helm chart to allow
 e.g. pre-pulling of images.  Use the `--list-images` option for this.
 
+### Helm Hooks
+
+Helm have [hooks](https://helm.sh/docs/charts_hooks/) that allow different
+actions at different points in a charts life-cycle. This basically means that
+different resources are created at different times, e.g. resources annotated
+with `pre-install` are created before the ordinary resources. To support this,
+`helm2yaml` allows filtering resources with hooks such that e.g. separate
+pre-install, ordinary and post-install resources can be rendered to three
+different YAML files by running `helm2yaml` three times with different filtering
+settings. Use `--hook-filter` to specify filtered resources.
+
 ### Notes
 
 `helm template` ignores namespace, i.e. the namespace is not included in the

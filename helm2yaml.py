@@ -91,7 +91,6 @@ def yaml2dict(app):
     return res_out
 
 def list_images(app):
-    app = yaml2dict(app)
     img_list = []
     for res in app:
         spec = None
@@ -130,6 +129,31 @@ metadata:
   name: {name}
 '''.format(name=app['namespace'])
 
+def resource_filter(res, args):
+    helm_hook_anno = 'helm.sh/hook'
+    out = []
+    if args.hook_filter:
+        logging.debug("Hook filter using '{}'".format(args.hook_filter))
+        for r in res:
+            match = False
+            if 'metadata' in r and 'annotations' in r['metadata']:
+                anno = r['metadata']['annotations']
+                logging.debug('Resource {}/{} annotations: {}'.format(r['kind'], r['metadata']['name'], anno))
+                if helm_hook_anno in anno:
+                    if anno[helm_hook_anno] in args.hook_filter:
+                        logging.debug('Resource {}/{} annotation value {} matched, filtering resource'.format(r['kind'], r['metadata']['name'], anno[helm_hook_anno]))
+                        match = True
+                    else:
+                        logging.info('Filtered resource {}/{} annotations: {}'.format(r['kind'], r['metadata']['name'], anno))
+                else: # No hook annotation - default match
+                    match = True
+            else: # No annotation - default match
+                match = True
+            if match:
+                logging.debug('Resource {}/{} matched'.format(r['kind'], r['metadata']['name']))
+                out.append(r)
+    return res
+
 def run_helm(specs, args):
     subprocess.check_output('helm init {}'.format(args.helm_init_args), shell=True)
 
@@ -160,7 +184,9 @@ def run_helm(specs, args):
         logging.debug('Helm command: {}'.format(cmd))
         out = subprocess.check_output(cmd, shell=True)
         out = out.decode('UTF-8','ignore')
-        apps.append(out)
+        res = yaml2dict(out)
+        res = resource_filter(res, args)
+        apps.append(res)
         if args.render_to:
             with fopener(args.render_to) as fh:
                 print(out, file=fh)
@@ -197,6 +223,8 @@ def main():
     parser.add_argument('--render-namespace-to', default=None,
                         help='Render Namespace resource (implicitly in Helm)')
     parser.add_argument('--list-images', action='store_true')
+    parser.add_argument('--hook-filter', default=[], action='append',
+                        help='Resource hook filter. Annotation values matching are removed from rendered output')
 
     subparsers = parser.add_subparsers()
     parser_helmsman = subparsers.add_parser('helmsman')
