@@ -140,7 +140,9 @@ with `pre-install` are created before the ordinary resources. To support this,
 `helm2yaml` allows filtering resources with hooks such that e.g. separate
 pre-install, ordinary and post-install resources can be rendered to three
 different YAML files by running `helm2yaml` three times with different filtering
-settings. Use `--hook-filter` to specify filtered resources.
+settings. Use `--hook-filter` to specify filtered resources. Hook filters are
+values to compare to the value of annotation `helm.sh/hook`. An empty string
+matches resources with no such annotation.
 
 ### Notes
 

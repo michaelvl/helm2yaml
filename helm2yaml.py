@@ -141,17 +141,19 @@ def resource_filter(res, args):
                 logging.debug('Resource {}/{} annotations: {}'.format(r['kind'], r['metadata']['name'], anno))
                 if helm_hook_anno in anno:
                     if anno[helm_hook_anno] in args.hook_filter:
-                        logging.debug('Resource {}/{} annotation value {} matched, filtering resource'.format(r['kind'], r['metadata']['name'], anno[helm_hook_anno]))
+                        logging.debug('Resource {}/{} annotation value {} matched'.format(r['kind'], r['metadata']['name'], anno[helm_hook_anno]))
                         match = True
-                    else:
-                        logging.info('Filtered resource {}/{} annotations: {}'.format(r['kind'], r['metadata']['name'], anno))
-                else: # No hook annotation - default match
+                else: # No hook annotation
+                    if len(args.hook_filter)==1 and args.hook_filter[0]=='':
+                        match = True
+            else: # No annotation
+                if len(args.hook_filter)==1 and args.hook_filter[0]=='':
                     match = True
-            else: # No annotation - default match
-                match = True
             if match:
                 logging.debug('Resource {}/{} matched'.format(r['kind'], r['metadata']['name']))
                 out.append(r)
+            else:
+                logging.info('Filtering resource {}/{}'.format(r['kind'], r['metadata']['name']))
     return res
 
 def run_helm(specs, args):
