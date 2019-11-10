@@ -158,6 +158,27 @@ def resource_filter(res, args):
         return res
     return out
 
+def resource_api_upgrade(res, args):
+    out = []
+    upgrades = [
+        {'kind': ['StatefulSet', 'DaemonSet', 'Deployment', 'ReplicaSet'], 'api': {'from': 'apps/v1beta1', 'to': 'apps/v1'}},
+        {'kind': ['StatefulSet', 'DaemonSet', 'Deployment', 'ReplicaSet'], 'api': {'from': 'apps/v1beta2', 'to': 'apps/v1'}},
+        {'kind': ['PodSecurityPolicy'], 'api': {'from': 'extensions/v1beta1', 'to': 'policy/v1beta1'}},
+        {'kind': ['NetworkPolicy'], 'api': {'from': 'extensions/v1beta1', 'to': 'networking.k8s.io/v1'}}
+    ]
+    if args.auto_api_upgrade:
+        logging.debug('Doing auto API upgrade')
+        for r in res:
+            api = r['apiVersion']
+            kind = r['kind']
+            name = r['metadata']['name']
+            logging.debug('Resource {}/{} api: {}'.format(kind, name, api))
+            for upg in upgrades:
+                if kind in upg['kind'] and api==upg['api']['from']:
+                    logging.warn('Upgrade API of {}/{} from {} to {}'.format(kind, name, api, upg['api']['to']))
+                    r['apiVersion'] = upg['api']['to']
+    return res
+
 def run_helm(specs, args):
     subprocess.check_output('helm init {}'.format(args.helm_init_args), shell=True)
 
@@ -190,6 +211,7 @@ def run_helm(specs, args):
         out = out.decode('UTF-8','ignore')
         res = yaml2dict(out)
         res = resource_filter(res, args)
+        res = resource_api_upgrade(res, args)
         apps.append(res)
         if args.render_to:
             with fopener(args.render_to) as fh:
@@ -231,6 +253,8 @@ def main():
     parser.add_argument('--list-images', action='store_true')
     parser.add_argument('--hook-filter', default=[], action='append',
                         help='Resource hook filter. Annotation values matching are removed from rendered output')
+    parser.add_argument('--auto-api-upgrade', default=False, action='store_true',
+                        help='Automatically upgrade API changes, e.g. the 1.16.0 API deprecations')
 
     subparsers = parser.add_subparsers()
     parser_helmsman = subparsers.add_parser('helmsman')
