@@ -147,6 +147,12 @@ settings. Use `--hook-filter` to specify filtered resources. Hook filters are
 values to compare to the value of annotation `helm.sh/hook`. An empty string
 matches resources with no such annotation.
 
+### Automatic API Upgrade
+
+In Kubernetes 1.16.0 several APIs versions where deprecated. By using
+`--auto-api-upgrade`, the `helm2yaml` tool can automatically upgrade APi
+versions.
+
 ### Notes
 
 `helm template` ignores namespace, i.e. the namespace is not included in the
