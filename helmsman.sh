@@ -8,7 +8,8 @@ set -xe
 mkdir -p ./rendered
 
 # Map current folder as /src and assume all files passed with -f are relative to this
-docker run --rm -v $(pwd):/src:ro -v $(pwd)/rendered:/rendered:rw $HELM2YAML --api-versions apiregistration.k8s.io/v1beta1 --api-versions apiextensions.k8s.io/v1beta1 --auto-api-upgrade --render-to /rendered/out.yaml --render-namespace-to /rendered/ns.yaml --hook-filter '' helmsman $@
+# Env HOME setting is necessary because Helm3 use HOME for config files
+docker run --rm --user $(id -u):$(id -g) -e HOME=/tmp/home -v $(pwd):/src:ro -v $(pwd)/rendered:/rendered:rw $HELM2YAML --api-versions apiregistration.k8s.io/v1beta1 --api-versions apiextensions.k8s.io/v1beta1 --auto-api-upgrade --render-to /rendered/out.yaml --render-namespace-to /rendered/ns.yaml --hook-filter '' helmsman $@
 
 kubectl apply -f rendered/ns.yaml
 NS=$(yq -r '.metadata.name' rendered/ns.yaml)
