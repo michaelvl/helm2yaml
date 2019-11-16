@@ -20,3 +20,8 @@ $ results=$(tools/sonobuoy.sh retrieve | sed 's/\r//')
 $ sonobuoy.sh results $results
 $ sonobuoy.sh delete --all
 ```
+
+```shell
+$ kubeaudit.sh priv -f manifests.yaml
+$ kubeaudit.sh limits -f manifests.yaml
+```
