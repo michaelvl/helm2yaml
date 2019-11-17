@@ -175,7 +175,7 @@ def resource_api_upgrade(res, args):
             logging.debug('Resource {}/{} api: {}'.format(kind, name, api))
             for upg in upgrades:
                 if kind in upg['kind'] and api==upg['api']['from']:
-                    logging.warn('Upgrade API of {}/{} from {} to {}'.format(kind, name, api, upg['api']['to']))
+                    logging.warning('Upgrade API of {}/{} from {} to {}'.format(kind, name, api, upg['api']['to']))
                     r['apiVersion'] = upg['api']['to']
     return res
 
