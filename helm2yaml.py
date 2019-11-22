@@ -139,7 +139,7 @@ def resource_filter(res, args):
             if 'metadata' in r and 'annotations' in r['metadata']:
                 anno = r['metadata']['annotations']
                 logging.debug('Resource {}/{} annotations: {}'.format(r['kind'], r['metadata']['name'], anno))
-                if helm_hook_anno in anno:
+                if anno and helm_hook_anno in anno:
                     if anno[helm_hook_anno] in args.hook_filter:
                         logging.debug('Resource {}/{} annotation value {} matched'.format(r['kind'], r['metadata']['name'], anno[helm_hook_anno]))
                         match = True
