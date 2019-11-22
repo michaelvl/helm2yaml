@@ -16,7 +16,7 @@ $ sonobuoy.sh run -m quick
 $ sonobuoy.sh run -m certified-conformance
 $ sonobuoy.sh status
 $ sonobuoy.sh logs -f
-$ results=$(tools/sonobuoy.sh retrieve | sed 's/\r//')
+$ results=$(sonobuoy.sh retrieve | sed 's/\r//')
 $ sonobuoy.sh results $results
 $ sonobuoy.sh delete --all
 ```
