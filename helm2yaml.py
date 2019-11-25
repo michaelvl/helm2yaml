@@ -225,7 +225,10 @@ def run_helm(specs, args):
         res = yaml2dict(out)
         res = resource_filter(res, args)
         res = resource_api_upgrade(res, args)
-        res, res_ns = resource_split_ns_no_ns(res, args)
+        if args.render_w_ns_to:
+            res, res_ns = resource_split_ns_no_ns(res, args)
+        else:
+            res_ns = []
         apps.append(res)
         apps.append(res_ns)
         if args.render_to:
@@ -233,6 +236,7 @@ def run_helm(specs, args):
                 for r in res:
                     print(yaml.dump(r), file=fh)
                     print('---', file=fh)
+        if args.render_w_ns_to:
             with fopener(args.render_w_ns_to) as fh:
                 for r in res_ns:
                     print(yaml.dump(r), file=fh)
