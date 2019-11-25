@@ -231,12 +231,12 @@ def run_helm(specs, args):
             res_ns = []
         apps.append(res)
         apps.append(res_ns)
-        if args.render_to:
+        if args.render_to and len(res)>0:
             with fopener(args.render_to) as fh:
                 for r in res:
                     print(yaml.dump(r), file=fh)
                     print('---', file=fh)
-        if args.render_w_ns_to:
+        if args.render_w_ns_to and len(res_ns)>0:
             with fopener(args.render_w_ns_to) as fh:
                 for r in res_ns:
                     print(yaml.dump(r), file=fh)
