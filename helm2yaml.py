@@ -159,7 +159,6 @@ def resource_filter(res, args):
     return out
 
 def resource_api_upgrade(res, args):
-    out = []
     upgrades = [
         {'kind': ['StatefulSet', 'DaemonSet', 'Deployment', 'ReplicaSet'], 'api': {'from': 'apps/v1beta1', 'to': 'apps/v1'}},
         {'kind': ['StatefulSet', 'DaemonSet', 'Deployment', 'ReplicaSet'], 'api': {'from': 'apps/v1beta2', 'to': 'apps/v1'}},
@@ -178,6 +177,20 @@ def resource_api_upgrade(res, args):
                     logging.warning('Upgrade API of {}/{} from {} to {}'.format(kind, name, api, upg['api']['to']))
                     r['apiVersion'] = upg['api']['to']
     return res
+
+def resource_split_ns_no_ns(res, args):
+    '''Split resource into a list of those that have a specific namespace and those without namespace'''
+    out = []
+    out_ns = []
+    for r in res:
+        kind = r['kind']
+        name = r['metadata']['name']
+        logging.debug('Resource {}/{}'.format(kind, name))
+        if 'namespace' in r['metadata']:
+            out_ns.append(r)
+        else:
+            out.append(r)
+    return out, out_ns
 
 def run_helm(specs, args):
     subprocess.check_output('helm init {}'.format(args.helm_init_args), shell=True)
@@ -212,10 +225,16 @@ def run_helm(specs, args):
         res = yaml2dict(out)
         res = resource_filter(res, args)
         res = resource_api_upgrade(res, args)
+        res, res_ns = resource_split_ns_no_ns(res, args)
         apps.append(res)
+        apps.append(res_ns)
         if args.render_to:
             with fopener(args.render_to) as fh:
                 for r in res:
+                    print(yaml.dump(r), file=fh)
+                    print('---', file=fh)
+            with fopener(args.render_w_ns_to) as fh:
+                for r in res_ns:
                     print(yaml.dump(r), file=fh)
                     print('---', file=fh)
         if args.render_namespace_to:
@@ -244,6 +263,7 @@ def main():
                         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                         help='Set the log level')
     parser.add_argument('--render-to', default=None)
+    parser.add_argument('--render-w-ns-to', default=None)
     parser.add_argument('-b', dest='helm_bin', default='helm')
     parser.add_argument('--helm-init-args', default='')
     parser.add_argument('--kube-version', default=None)
