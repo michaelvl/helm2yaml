@@ -182,15 +182,23 @@ def resource_split_ns_no_ns(res, args):
     '''Split resource into a list of those that have a specific namespace and those without namespace'''
     out = []
     out_ns = []
+    secrets = []
+    secrets_ns = []
     for r in res:
         kind = r['kind']
         name = r['metadata']['name']
         logging.debug('Resource {}/{}'.format(kind, name))
         if 'namespace' in r['metadata']:
-            out_ns.append(r)
+            if kind=='Secret':
+                secrets_ns.append(r)
+            else:
+                out_ns.append(r)
         else:
-            out.append(r)
-    return out, out_ns
+            if kind=='Secret':
+                secrets.append(r)
+            else:
+                out.append(r)
+    return out, out_ns, secrets, secrets_ns
 
 def run_helm(specs, args):
     subprocess.check_output('helm init {}'.format(args.helm_init_args), shell=True)
@@ -225,22 +233,27 @@ def run_helm(specs, args):
         res = yaml2dict(out)
         res = resource_filter(res, args)
         res = resource_api_upgrade(res, args)
-        if args.render_w_ns_to:
-            res, res_ns = resource_split_ns_no_ns(res, args)
-        else:
-            res_ns = []
+        res, res_ns, secrets, secrets_ns = resource_split_ns_no_ns(res, args)
         apps.append(res)
         apps.append(res_ns)
-        if args.render_to and len(res)>0:
-            with fopener(args.render_to) as fh:
-                for r in res:
-                    print(yaml.dump(r), file=fh)
-                    print('---', file=fh)
-        if args.render_w_ns_to and len(res_ns)>0:
-            with fopener(args.render_w_ns_to) as fh:
-                for r in res_ns:
-                    print(yaml.dump(r), file=fh)
-                    print('---', file=fh)
+        apps.append(secrets)
+        apps.append(secrets_ns)
+
+        if not args.render_w_ns_to:
+            res += res_ns
+        if not args.render_secrets_w_ns_to:
+            secrets += secrets_ns
+        if not args.render_secrets_to:
+            res += secrets
+
+        fnames = [args.render_to, args.render_w_ns_to, args.render_secrets_to, args.render_secrets_w_ns_to]
+        sources = [res, res_ns, secrets, secrets_ns]
+        for fname, src in zip(fnames, sources):
+            if fname and len(src)>0:
+                with fopener(fname) as fh:
+                    for r in src:
+                        print(yaml.dump(r), file=fh)
+                        print('---', file=fh)
         if args.render_namespace_to:
             with fopener(args.render_namespace_to) as fh:
                 print(get_namespace_resource(args, app), file=fh)
@@ -268,6 +281,8 @@ def main():
                         help='Set the log level')
     parser.add_argument('--render-to', default=None)
     parser.add_argument('--render-w-ns-to', default=None)
+    parser.add_argument('--render-secrets-to', default=None)
+    parser.add_argument('--render-secrets-w-ns-to', default=None)
     parser.add_argument('-b', dest='helm_bin', default='helm')
     parser.add_argument('--helm-init-args', default='')
     parser.add_argument('--kube-version', default=None)
