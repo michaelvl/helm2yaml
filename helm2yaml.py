@@ -182,23 +182,29 @@ def resource_split_ns_no_ns(res, args):
     '''Split resource into a list of those that have a specific namespace and those without namespace'''
     out = []
     out_ns = []
-    secrets = []
-    secrets_ns = []
     for r in res:
         kind = r['kind']
         name = r['metadata']['name']
         logging.debug('Resource {}/{}'.format(kind, name))
         if 'namespace' in r['metadata']:
-            if kind=='Secret':
-                secrets_ns.append(r)
-            else:
-                out_ns.append(r)
+            out_ns.append(r)
         else:
-            if kind=='Secret':
-                secrets.append(r)
-            else:
-                out.append(r)
-    return out, out_ns, secrets, secrets_ns
+            out.append(r)
+    return out, out_ns
+
+def resource_separate(res, kinds):
+    '''Split out resource of specific kinds'''
+    out = []
+    out_sep = []
+    for r in res:
+        kind = r['kind']
+        name = r['metadata']['name']
+        logging.debug('Resource {}/{}'.format(kind, name))
+        if kind in kinds:
+            out_sep.append(r)
+        else:
+            out.append(r)
+    return out, out_sep
 
 def run_helm(specs, args):
     subprocess.check_output('helm init {}'.format(args.helm_init_args), shell=True)
@@ -233,7 +239,18 @@ def run_helm(specs, args):
         res = yaml2dict(out)
         res = resource_filter(res, args)
         res = resource_api_upgrade(res, args)
-        res, res_ns, secrets, secrets_ns = resource_split_ns_no_ns(res, args)
+        if args.render_w_ns_to:
+            res, res_ns = resource_split_ns_no_ns(res, args)
+        else:
+            res_ns = []
+        if args.render_secrets_to:
+            res, secrets = resource_separate(res, ['Secret'])
+        else:
+            secrets = []
+        if args.render_secrets_w_ns_to and args.render_w_ns_to:
+            res_ns, secrets_ns = resource_separate(res_ns, ['Secret'])
+        else:
+            secrets_ns = []
         apps.append(res)
         apps.append(res_ns)
         apps.append(secrets)
