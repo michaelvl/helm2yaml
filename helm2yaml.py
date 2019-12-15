@@ -296,10 +296,14 @@ def main():
     parser.add_argument('-l', dest='log_level', default='INFO',
                         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                         help='Set the log level')
-    parser.add_argument('--render-to', default=None)
-    parser.add_argument('--render-w-ns-to', default=None)
-    parser.add_argument('--render-secrets-to', default=None)
-    parser.add_argument('--render-secrets-w-ns-to', default=None)
+    parser.add_argument('--render-to', default=None,
+                        help='File to render resources to')
+    parser.add_argument('--render-w-ns-to', default=None,
+                        help='File to render resources with explicit namespace specification to')
+    parser.add_argument('--render-secrets-to', default=None,
+                        help='File to render secrets resources to')
+    parser.add_argument('--render-secrets-w-ns-to', default=None,
+                        help='File to render secrets resources with explicit namespace specification to')
     parser.add_argument('-b', dest='helm_bin', default='helm')
     parser.add_argument('--helm-init-args', default='')
     parser.add_argument('--kube-version', default=None)

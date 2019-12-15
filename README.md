@@ -129,6 +129,15 @@ helm2yaml.py -b ~/bin/helm3 helmsman -f my-app.yaml
 The helm2yaml tool is available as a container, e.g. see the `helmsman.sh`
 Helmsman-replacement script.
 
+### Integrating with Sealed Secrets
+
+[Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) is a mechanism
+that allows encryption of secrets such that they can be stored in git and only
+decrypted inside a Kubernetes cluster by a sealed-secrets controller. This
+requires sealing of secrets and to support this usecase, the helm2yaml tools
+allows rendering secrets into a separate file. See the `--render-secrets-to` and
+`--render-secrets-w-ns-to` arguments.
+
 ### List Images
 
 The helm2yaml tool can also be used to list images used in a Helm chart to allow
