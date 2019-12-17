@@ -1,6 +1,6 @@
 ## Kubernetes application deployment utilities
 
-This repository contain tools for implementatin GitOps with Helm.
+This repository contain tools for implementing GitOps with Helm.
 
 With `helm install` the Kubernetes resource YAML is not retained outside of
 Kubernetes. This is an anti-pattern in CI/CD, where we strive to separate the
@@ -11,6 +11,14 @@ helm chart version, the Kubernetes API capabilities, whether the chart was
 installed already and the values we specify for the configuration. With all
 these moving parts, the resulting YAML should be retained similarly to how we
 retain the binary artifact from source-code compilation.
+
+Kubernetes PodSecurityPolicies allow specifying policies for applications we
+deploy to Kubernetes.  With CI/CD we try to 'shift-left', i.e. perform
+validation early and fail early. With Helm, the application deployment will not
+fail until it has been deployed to Kubernetes. A better alternative is to
+complement PodSecurityPolicies with pre-deployment validation with
+e.g. (conftest)[https://github.com/instrumenta/conftest],
+(kubeaudit)[https://github.com/Shopify/kubeaudit] or similar tools.
 
 The `helm2yaml` tool reads [Helmsman](https://github.com/Praqma/helmsman) and
 [FluxCD](https://fluxcd.io/) Kubernetes applications specs and allows for
@@ -38,7 +46,7 @@ helm2yaml.py --render-to final-app.yaml helmsman -f helmsman-app-spec.yaml
 kubectl apply -f final-app.yaml
 ```
 
-Similarly wuth FluxCD application specs:
+Similarly with FluxCD application specs:
 
 ```
 helm2yaml.py --render-to final-app.yaml fluxcd -f fluxcd-app-spec.yaml
@@ -53,7 +61,7 @@ trail.
 ### Helmsman Replacement
 
 The script `helmsman.sh` is a script that implements some of the Helmsman
-functionality, i.e. Helmsman application installation can be immitated with `helm2yaml` and `kubectl`
+functionality, i.e. Helmsman application installation can be imitated with `helm2yaml` and `kubectl`
 
 E.g.:
 
@@ -61,7 +69,7 @@ E.g.:
 helmsman --apply -f app.yaml
 ```
 
-can be replcaed with:
+can be replaced with:
 
 ```
 helmsman.sh --apply -f app.yaml
@@ -75,7 +83,7 @@ and ignore e.g. test resources etc. See notes on hooks below.
 If the application deployment contains secrets which should not be included in
 the rendered YAML, these secrets could be injected at the YAML deployment stage
 using e.g. `envsubst`. Note however, that `envsubst` replace all environment
-variable occurences and e.g. shell scripts being passed into configmaps could
+variable occurrences and e.g. shell scripts being passed into configmaps could
 have environment variables wrongly replaced (potentially with empty
 strings). The Grafana test that is part of the Grafana Helm chart is an example
 of such a situation. If `envsubst` us used, the specific variables that should
@@ -159,7 +167,7 @@ matches resources with no such annotation.
 ### Automatic API Upgrade
 
 In Kubernetes 1.16.0 several APIs versions where deprecated. By using
-`--auto-api-upgrade`, the `helm2yaml` tool can automatically upgrade APi
+`--auto-api-upgrade`, the `helm2yaml` tool can automatically upgrade API
 versions.
 
 ### Notes
@@ -191,8 +199,8 @@ production environments!
 Dependencies (requirements.yaml in a chart) are handled properly.
 
 Helm use [hooks](https://github.com/helm/helm/blob/master/docs/charts_hooks.md)
-to deploy groups of resources at different points in the deployment lifecycle,
+to deploy groups of resources at different points in the deployment life-cycle,
 e.g. a resource with an `helm.sh/hook` annotation containing `post-install`
 means that this resource should be deployed after the main resources. With `helm
-template` the hook statemachine is not available and resources that normally
+template` the hook state-machine is not available and resources that normally
 would not be deployed might be deployed (e.g. test resources).
