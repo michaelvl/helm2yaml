@@ -179,7 +179,8 @@ namespace argument - see the `helmsman.sh` Helmsman-replacement script for an
 example. Charts that create resources in multiple namespaces may be problematic,
 see e.g. [Helm issue
 1744](https://github.com/jetstack/cert-manager/issues/1744). Luckily such charts
-are rare - known examples are `cert-manager` and `metrics-server`.
+are rare - known examples are `cert-manager` and `metrics-server`.  Helm2yaml
+allow rendering to multiple files to support such charts.
 
 Using `helm template` validates the YAML according to the default set of API
 versions. This might not suffice for some charts and thus additional APIs could
