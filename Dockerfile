@@ -2,7 +2,7 @@ FROM python:3.7.4-slim-stretch
 
 ARG HELM2_VERSION="v2.16.1"
 ENV HELM2_VERSION=$HELM2_VERSION
-ARG HELM3_VERSION="v3.0.1"
+ARG HELM3_VERSION="v3.0.2"
 ENV HELM3_VERSION=$HELM3_VERSION
 
 RUN apt-get -y update && apt-get install -y curl && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
