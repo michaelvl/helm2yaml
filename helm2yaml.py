@@ -229,7 +229,7 @@ def run_helm(specs, args):
                 with open('{}/{}'.format(app['dirname'], vf), 'r') as vfn_src:
                     src = vfn_src.read()
                     dst = string.Template(src).safe_substitute(os.environ)
-                    logging.debug('Env expanded values: {}'.format(dst))
+                    logging.debug('Env expanded values in file {}:\n{}'.format(vf, dst))
                     vfn_dst.write(dst)
             cmd += ' --values {}/{}'.format(tmpdir, vf)
         cmd += ' {}/charts/{}'.format(tmpdir, app['chart'])
@@ -239,15 +239,32 @@ def run_helm(specs, args):
         res = yaml2dict(out)
         res = resource_filter(res, args)
         res = resource_api_upgrade(res, args)
-        if args.render_w_ns_to:
+
+        if args.add_namespace_to_path:
+            base = args.render_path + '/' + app['namespace'] + '-' + app['rel_name']
+        else:
+            base = args.render_path + '/' + app['rel_name']
+        render_to = base + '.yaml'
+        render_namespace_to = base + '-ns.yaml'
+        render_w_ns_to = None
+        render_secrets_to = None
+        render_secrets_w_ns_to = None
+        if args.separate_secrets:
+            render_secrets_to = base + '-secrets.yaml'
+        if args.separate_with_ns:
+            render_w_ns_to = base + '-w-ns.yaml'
+            if args.separate_secrets:
+                render_secrets_w_ns_to = base + '-secrets-w-ns.yaml'
+
+        if render_w_ns_to:
             res, res_ns = resource_split_ns_no_ns(res, args)
         else:
             res_ns = []
-        if args.render_secrets_to:
+        if render_secrets_to:
             res, secrets = resource_separate(res, ['Secret'])
         else:
             secrets = []
-        if args.render_secrets_w_ns_to and args.render_w_ns_to:
+        if render_secrets_w_ns_to and render_w_ns_to:
             res_ns, secrets_ns = resource_separate(res_ns, ['Secret'])
         else:
             secrets_ns = []
@@ -256,14 +273,14 @@ def run_helm(specs, args):
         apps.append(secrets)
         apps.append(secrets_ns)
 
-        if not args.render_w_ns_to:
+        if not render_w_ns_to:
             res += res_ns
-        if not args.render_secrets_w_ns_to:
+        if not render_secrets_w_ns_to:
             secrets += secrets_ns
-        if not args.render_secrets_to:
+        if not render_secrets_to:
             res += secrets
 
-        fnames = [args.render_to, args.render_w_ns_to, args.render_secrets_to, args.render_secrets_w_ns_to]
+        fnames = [render_to, render_w_ns_to, render_secrets_to, render_secrets_w_ns_to]
         sources = [res, res_ns, secrets, secrets_ns]
         for fname, src in zip(fnames, sources):
             if fname and len(src)>0:
@@ -271,8 +288,8 @@ def run_helm(specs, args):
                     for r in src:
                         print(yaml.dump(r), file=fh)
                         print('---', file=fh)
-        if args.render_namespace_to:
-            with fopener(args.render_namespace_to) as fh:
+        if render_namespace_to:
+            with fopener(render_namespace_to) as fh:
                 print(get_namespace_resource(args, app), file=fh)
     return apps
 
@@ -296,20 +313,17 @@ def main():
     parser.add_argument('-l', dest='log_level', default='INFO',
                         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                         help='Set the log level')
-    parser.add_argument('--render-to', default=None,
-                        help='File to render resources to')
-    parser.add_argument('--render-w-ns-to', default=None,
-                        help='File to render resources with explicit namespace specification to')
-    parser.add_argument('--render-secrets-to', default=None,
-                        help='File to render secrets resources to')
-    parser.add_argument('--render-secrets-w-ns-to', default=None,
-                        help='File to render secrets resources with explicit namespace specification to')
+
+    parser.add_argument('--render-path', default='rendered')
+    parser.add_argument('--add-namespace-to-path', default=False, action='store_true')
+    parser.add_argument('--separate-with-ns', default=False, action='store_true',
+                        help='Separate out resources with explicit namespace spec')
+    parser.add_argument('--separate-secrets', default=False, action='store_true',
+                        help='Separate out secrets')
     parser.add_argument('-b', dest='helm_bin', default='helm')
     parser.add_argument('--helm-init-args', default='')
     parser.add_argument('--kube-version', default=None)
     parser.add_argument('--api-versions', default=[], action='append')
-    parser.add_argument('--render-namespace-to', default=None,
-                        help='Render Namespace resource (implicitly in Helm)')
     parser.add_argument('--list-images', action='store_true')
     parser.add_argument('--hook-filter', default=[], action='append',
                         help='Resource hook filter. Annotation values matching are removed from rendered output')

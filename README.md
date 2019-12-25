@@ -38,18 +38,19 @@ should be retained as an artifact such that we both have an audit trail for what
 was actually deployed and such that we can be sure we can re-deploy the
 application without having to re-run Helm to re-render the YAML.
 
-With the helm2yaml tool, the final YAML can be retained by using the `--render-to`
-argument as follows:
+With the helm2yaml tool, the final YAML will be written to file named from the
+Helm release name. With a Helmsman application spec, the YAML can be rendered as
+follows>
 
 ```
-helm2yaml.py --render-to final-app.yaml helmsman -f helmsman-app-spec.yaml
+helm2yaml.py helmsman -f helmsman-app-spec.yaml
 kubectl apply -f final-app.yaml
 ```
 
 Similarly with FluxCD application specs:
 
 ```
-helm2yaml.py --render-to final-app.yaml fluxcd -f fluxcd-app-spec.yaml
+helm2yaml.py fluxcd -f fluxcd-app-spec.yaml
 kubectl apply -f final-app.yaml
 ```
 
@@ -110,9 +111,9 @@ using e.g. [kubeaudit](https://github.com/Shopify/kubeaudit). E.g.
 
 ```
 # First render the final YAML based on a Helmsman application spec
-./helm2yaml.py --render-to prometheus-final.yaml helmsman -f examples/prometheus.yaml
+./helm2yaml.py helmsman -f examples/prometheus-helmsman-spec.yaml
 # Then run kubeaudit to validate the YAML
-kubeaudit nonroot -v ERROR -f prometheus-final.yaml
+kubeaudit nonroot -v ERROR -f prometheus.yaml
 ```
 
 This will produce errors like the following:
@@ -143,8 +144,8 @@ Helmsman-replacement script.
 that allows encryption of secrets such that they can be stored in git and only
 decrypted inside a Kubernetes cluster by a sealed-secrets controller. This
 requires sealing of secrets and to support this usecase, the helm2yaml tools
-allows rendering secrets into a separate file. See the `--render-secrets-to` and
-`--render-secrets-w-ns-to` arguments.
+allows rendering secrets into a separate file. See the `--separate-secrets` and
+`--separate-with-ns` arguments.
 
 ### List Images
 
@@ -173,14 +174,12 @@ versions.
 ### Notes
 
 `helm template` ignores namespace, i.e. the namespace is not included in the
-rendered YAML. To include a namespace resource, use the `--render-namespace-to`
-argument.  Applying rendered YAML with `kubectl` should use an explicit
-namespace argument - see the `helmsman.sh` Helmsman-replacement script for an
-example. Charts that create resources in multiple namespaces may be problematic,
-see e.g. [Helm issue
-1744](https://github.com/jetstack/cert-manager/issues/1744). Luckily such charts
-are rare - known examples are `cert-manager` and `metrics-server`.  Helm2yaml
-allow rendering to multiple files to support such charts.
+rendered YAML. To support this, the `helm2yaml` tool renders a namespace
+resource and allows separating resources into those who have an explicit
+namespace specification and those who do not. See the
+`--separete-with-namespace` argument.  Applying rendered YAML with `kubectl`
+should use an explicit namespace argument - see the `helmsman.sh`
+Helmsman-replacement script for an example on how to do this.
 
 Using `helm template` validates the YAML according to the default set of API
 versions. This might not suffice for some charts and thus additional APIs could
