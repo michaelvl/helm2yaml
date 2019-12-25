@@ -251,7 +251,7 @@ def run_helm(specs, args):
         render_secrets_w_ns_to = None
         if args.separate_secrets:
             render_secrets_to = base + '-secrets.yaml'
-        if args.separate_with_ns:
+        if args.separate_with_namespace:
             render_w_ns_to = base + '-w-ns.yaml'
             if args.separate_secrets:
                 render_secrets_w_ns_to = base + '-secrets-w-ns.yaml'
@@ -316,7 +316,7 @@ def main():
 
     parser.add_argument('--render-path', default='rendered')
     parser.add_argument('--add-namespace-to-path', default=False, action='store_true')
-    parser.add_argument('--separate-with-ns', default=False, action='store_true',
+    parser.add_argument('--separate-with-namespace', default=False, action='store_true',
                         help='Separate out resources with explicit namespace spec')
     parser.add_argument('--separate-secrets', default=False, action='store_true',
                         help='Separate out secrets')
