@@ -280,17 +280,18 @@ def run_helm(specs, args):
         if not render_secrets_to:
             res += secrets
 
-        fnames = [render_to, render_w_ns_to, render_secrets_to, render_secrets_w_ns_to]
-        sources = [res, res_ns, secrets, secrets_ns]
-        for fname, src in zip(fnames, sources):
-            if fname and len(src)>0:
-                with fopener(fname) as fh:
-                    for r in src:
-                        print(yaml.dump(r), file=fh)
-                        print('---', file=fh)
-        if render_namespace_to:
-            with fopener(render_namespace_to) as fh:
-                print(get_namespace_resource(args, app), file=fh)
+        if not args.list_images:
+            fnames = [render_to, render_w_ns_to, render_secrets_to, render_secrets_w_ns_to]
+            sources = [res, res_ns, secrets, secrets_ns]
+            for fname, src in zip(fnames, sources):
+                if fname and len(src)>0:
+                    with fopener(fname) as fh:
+                        for r in src:
+                            print(yaml.dump(r), file=fh)
+                            print('---', file=fh)
+            if render_namespace_to:
+                with fopener(render_namespace_to) as fh:
+                    print(get_namespace_resource(args, app), file=fh)
     return apps
 
 def do_helmsman(args):
