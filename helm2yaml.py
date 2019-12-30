@@ -221,7 +221,7 @@ def run_helm(specs, args):
             cmd += ' --api-versions {}'.format(apiver)
         for k,v in app['set'].items():
             if type(v) is str:
-                cmd += ' --set {}={}'.format(k,string.Template(v).safe_substitute(os.environ))
+                cmd += " --set {}='{}'".format(k,string.Template(v).safe_substitute(os.environ))
             else:
                 cmd += ' --set {}={}'.format(k,v)
         for vf in app['valuesfiles']:
