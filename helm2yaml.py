@@ -162,6 +162,7 @@ def resource_api_upgrade(res, args):
     upgrades = [
         {'kind': ['StatefulSet', 'DaemonSet', 'Deployment', 'ReplicaSet'], 'api': {'from': 'apps/v1beta1', 'to': 'apps/v1'}},
         {'kind': ['StatefulSet', 'DaemonSet', 'Deployment', 'ReplicaSet'], 'api': {'from': 'apps/v1beta2', 'to': 'apps/v1'}},
+        {'kind': ['Deployment'], 'api': {'from': 'extensions/v1beta1', 'to': 'apps/v1'}},
         {'kind': ['PodSecurityPolicy'], 'api': {'from': 'extensions/v1beta1', 'to': 'policy/v1beta1'}},
         {'kind': ['NetworkPolicy'], 'api': {'from': 'extensions/v1beta1', 'to': 'networking.k8s.io/v1'}}
     ]
