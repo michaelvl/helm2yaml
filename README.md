@@ -151,7 +151,12 @@ Note, however, that the sealed-secrets encryption algorithm includes a [random
 session
 key](https://github.com/bitnami-labs/sealed-secrets/blob/master/docs/crypto.md)
 in the encrypted material, which means there will always be difference in the
-sealed secret.
+sealed secret even though no change was made to the unsealed secret. Using
+methods like keeping a checksum of the original secret to detect changes is not
+recommended since it may leak secret data.
+
+There is currently no known mechanism for this issue without potentially
+compromising secure data.
 
 ### List Images
 
