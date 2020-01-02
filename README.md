@@ -143,9 +143,15 @@ Helmsman-replacement script.
 [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) is a mechanism
 that allows encryption of secrets such that they can be stored in git and only
 decrypted inside a Kubernetes cluster by a sealed-secrets controller. This
-requires sealing of secrets and to support this usecase, the helm2yaml tools
+requires sealing of secrets and to support this usecase, the `helm2yaml` tool
 allows rendering secrets into a separate file. See the `--separate-secrets` and
 `--separate-with-ns` arguments.
+
+Note, however, that the sealed-secrets encryption algorithm includes a [random
+session
+key](https://github.com/bitnami-labs/sealed-secrets/blob/master/docs/crypto.md)
+in the encrypted material, which means there will always be difference in the
+sealed secret.
 
 ### List Images
 
