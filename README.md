@@ -171,6 +171,13 @@ In Kubernetes 1.16.0 several APIs versions where deprecated. By using
 `--auto-api-upgrade`, the `helm2yaml` tool can automatically upgrade API
 versions.
 
+### Running Container as Non-Root
+
+When using `helm2yaml` as a container with Helm3, the `HOME` environment
+variable should be set to a path write-able by the user UID used within the
+container. This is due to Helm3 using the HOMe environment variable for location
+of configuration.
+
 ### Notes
 
 `helm template` ignores namespace, i.e. the namespace is not included in the
