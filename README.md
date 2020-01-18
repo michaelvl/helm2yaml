@@ -156,7 +156,8 @@ methods like keeping a checksum of the original secret to detect changes is not
 recommended since it may leak secret data.
 
 There is currently no known mechanism for this issue without potentially
-compromising secure data.
+compromising secure data. See also [this sealed-secrets
+issue](https://github.com/bitnami-labs/sealed-secrets/issues/131).
 
 ### List Images
 
