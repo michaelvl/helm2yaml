@@ -179,6 +179,23 @@ def resource_api_upgrade(res, args):
                     r['apiVersion'] = upg['api']['to']
     return res
 
+def resource_sort(res, args):
+    '''Sort resource list by resource name, but without changing overall resource kind sorting'''
+    if args.no_sort:
+        return res
+    out = []
+    tmp = []
+    last_kind = None
+    for r in res:
+        kind = r['kind']
+        if last_kind and kind != last_kind:
+            out += sorted(tmp, key=lambda r: r['metadata']['name'])
+            tmp = []
+        tmp.append(r)
+        last_kind = kind
+    out += sorted(tmp, key=lambda r: r['metadata']['name'])
+    return out
+
 def resource_split_ns_no_ns(res, args):
     '''Split resource into a list of those that have a specific namespace and those without namespace'''
     out = []
@@ -206,6 +223,14 @@ def resource_separate(res, kinds):
         else:
             out.append(r)
     return out, out_sep
+
+def resource_list(header, res):
+    logging.debug('{} ({} resources):'.format(header, len(res)))
+    for r in res:
+        api = r['apiVersion']
+        kind = r['kind']
+        name = r['metadata']['name']
+        logging.debug('Resource {}/{}/{}'.format(api, kind, name))
 
 def run_helm(specs, args):
     subprocess.check_output('helm init {}'.format(args.helm_init_args), shell=True)
@@ -238,8 +263,10 @@ def run_helm(specs, args):
         out = subprocess.check_output(cmd, shell=True)
         out = out.decode('UTF-8','ignore')
         res = yaml2dict(out)
+        resource_list('Resources from Helm', res)
         res = resource_filter(res, args)
         res = resource_api_upgrade(res, args)
+        resource_list('Upgraded resources', res)
 
         if args.add_namespace_to_path:
             base = args.render_path + '/' + app['namespace'] + '-' + app['rel_name']
@@ -280,6 +307,15 @@ def run_helm(specs, args):
             secrets += secrets_ns
         if not render_secrets_to:
             res += secrets
+
+        res = resource_sort(res, args)
+        res_ns = resource_sort(res_ns, args)
+        secrets = resource_sort(secrets, args)
+        secrets_ns = resource_sort(secrets_ns, args)
+        resource_list('Render-ready resources without explicit namespace', res)
+        resource_list('Render-ready resources with explicit namespace', res_ns)
+        resource_list('Render-ready secrets without explicit namespace', secrets)
+        resource_list('Render-ready secrets with explicit namespace', secrets_ns)
 
         if not args.list_images:
             fnames = [render_to, render_w_ns_to, render_secrets_to, render_secrets_w_ns_to]
@@ -331,6 +367,8 @@ def main():
                         help='Resource hook filter. Annotation values matching are removed from rendered output')
     parser.add_argument('--auto-api-upgrade', default=False, action='store_true',
                         help='Automatically upgrade API changes, e.g. the 1.16.0 API deprecations')
+    parser.add_argument('--no-sort', action='store_true', default=False,
+                        help='Sort resources by name')
 
     subparsers = parser.add_subparsers()
     parser_helmsman = subparsers.add_parser('helmsman')
