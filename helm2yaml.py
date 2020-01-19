@@ -301,13 +301,6 @@ def run_helm(specs, args):
         apps.append(secrets)
         apps.append(secrets_ns)
 
-        if not render_w_ns_to:
-            res += res_ns
-        if not render_secrets_w_ns_to:
-            secrets += secrets_ns
-        if not render_secrets_to:
-            res += secrets
-
         res = resource_sort(res, args)
         res_ns = resource_sort(res_ns, args)
         secrets = resource_sort(secrets, args)
