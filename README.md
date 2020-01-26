@@ -107,19 +107,23 @@ A GitOps pipeline example is shown below:
 ### YAML Audit
 
 Before the final YAML is deployed to a Kubernetes cluster, it can be validated
-using e.g. [kubeaudit](https://github.com/Shopify/kubeaudit). E.g.
+using e.g. [conftest](https://github.com/MichaelVL/kubernetes-rego-tests). E.g.
 
 ```
 # First render the final YAML based on a Helmsman application spec
-./helm2yaml.py helmsman -f examples/prometheus-helmsman-spec.yaml
-# Then run kubeaudit to validate the YAML
-kubeaudit nonroot -v ERROR -f prometheus.yaml
+$ mkdir rendered
+$ docker run --rm --user `id -u`:`id -g` -e HOME=/tmp/home -v $PWD:/src -v $PWD/rendered:/rendered michaelvl/helm2yaml helmsman -f examples/prometheus.yaml
+# Then run conftest/Rego-based audits to validate the YAML
+cat rendered/prometheus.yaml | docker run -i --rm michaelvl/conftest-kubernetes | grep FAIL
 ```
 
 This will produce errors like the following:
 
 ```
-ERRO[0000] RunAsNonRoot is not set in ContainerSecurityContext, which results in root user being allowed!
+FAIL - prometheus-server in the Deployment prometheus-server does not have a memory limit set
+FAIL - prometheus-server in the Deployment prometheus-server doesn't drop all capabilities
+FAIL - prometheus-server in the Deployment prometheus-server is not using a read only root filesystem
+FAIL - prometheus-server in the Deployment prometheus-server is running as root
 ```
 
 which can be used to fail the GitOps pipeline for the application deployment.
