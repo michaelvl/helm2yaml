@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+#set -x
 set -e
 
 KUBECTL_IMAGE=bitnami/kubectl:1.17.3
