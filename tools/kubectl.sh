@@ -3,7 +3,7 @@
 set -x
 set -e
 
-KUBECTL_IMAGE=bitnami/kubectl:1.15.0
+KUBECTL_IMAGE=bitnami/kubectl:1.17.3
 # Pass-in both the user .kube folder and the current value of KUBECONFIG
 KUBECFG="-v ${HOME}/.kube:${HOME}/.kube"
 MANIFESTS="-v $(pwd):/work"
