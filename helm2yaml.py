@@ -270,10 +270,12 @@ def run_helm(specs, args):
 
         if args.add_namespace_to_path:
             base = args.render_path + '/' + app['namespace'] + '-' + app['rel_name']
+            base_ns = args.render_path + '/' + args.namespace_filename_prefix + app['namespace'] + '-' + app['rel_name']
         else:
             base = args.render_path + '/' + app['rel_name']
+            base_ns = args.render_path + '/' + args.namespace_filename_prefix + app['rel_name']
         render_to = base + '.yaml'
-        render_namespace_to = base + '-ns.yaml'
+        render_namespace_to = base_ns + '-ns.yaml'
         render_w_ns_to = None
         render_secrets_to = None
         render_secrets_w_ns_to = None
@@ -346,7 +348,10 @@ def main():
                         help='Set the log level')
 
     parser.add_argument('--render-path', default='rendered')
-    parser.add_argument('--add-namespace-to-path', default=False, action='store_true')
+    parser.add_argument('--add-namespace-to-path', default=False, action='store_true',
+                        help='Add destination namespace to rendered files')
+    parser.add_argument('--namespace-filename-prefix', default='00-',
+                        help='Prefix for namespace filename')
     parser.add_argument('--separate-with-namespace', default=False, action='store_true',
                         help='Separate out resources with explicit namespace spec')
     parser.add_argument('--separate-secrets', default=False, action='store_true',
