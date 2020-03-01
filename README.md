@@ -7,9 +7,10 @@ This repository contain tools for implementing GitOps with Helm.
 The shortcomings of `helm template` are:
 
 - It does not support Helm hooks. This means too many resources are rendered.
-- The order of resources within a given Kubernetes kind is random and changes. This break GitOps diff.
+- The order of resources within a given Kubernetes kind is random and changes between different helm invocations. This break GitOps diff.
 - All resources are rendered into one output which makes it difficult to seal secrets.
 - Resources do not have their namespace explicitly set unless the chart does this itself.
+- Helm does not have a declarative spec for application configuration (e.g. like Helmsman or Helmsfile)
 
 The tool `helm2yaml` have solutions for these issues.
 
