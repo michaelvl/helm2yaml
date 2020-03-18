@@ -83,7 +83,7 @@ def parse_flux(fname):
 
 def yaml2dict(app):
     res_out = []
-    for res in app.split('---\n'):
+    for res in app.split('\n---\n'):
         res = string.Template(res).safe_substitute(os.environ)
         res = yaml.load(res, Loader=yaml.FullLoader)
         if res:
@@ -227,6 +227,8 @@ def resource_separate(res, kinds):
 def resource_list(header, res):
     logging.debug('{} ({} resources):'.format(header, len(res)))
     for r in res:
+        if not set(['apiVersion', 'kind', 'metadata']).issubset(r.keys()):
+            logging.error('Resource missing keys: {}'.format(r))
         api = r['apiVersion']
         kind = r['kind']
         name = r['metadata']['name']
@@ -262,6 +264,7 @@ def run_helm(specs, args):
         logging.debug('Helm command: {}'.format(cmd))
         out = subprocess.check_output(cmd, shell=True)
         out = out.decode('UTF-8','ignore')
+        logging.debug('Output from Helm: {}'.format(out))
         res = yaml2dict(out)
         resource_list('Resources from Helm', res)
         res = resource_filter(res, args)
