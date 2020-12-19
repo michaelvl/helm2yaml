@@ -40,20 +40,28 @@ def parse_helmsman(fname):
             for app_name in apps['apps'].keys():
                 app = apps['apps'][app_name]
                 logging.debug('App {}: {}'.format(app_name, app))
-                chart_repo = app['chart'].split('/')[0]
-                if chart_repo not in repos:
-                    raise ParseError("Repo '{}' not found".format(chart_repo))
-                if not app['enabled']:
-                    logging.info('Skiping disabled deployment {}'.format(app_name))
-                    continue
-                repo = repos[chart_repo]
+                if '/' in app['chart']:
+                    chart_repo = app['chart'].split('/')[0]
+                    chart = app['chart'].split('/')[1]
+                else:
+                    chart_repo = None
+                    chart = app['chart']
                 new_app = {'rel_name':   app_name,
                            'namespace':  app['namespace'],
-                           'repository': repo,
-                           'chart':      app['chart'].split('/')[1],
+                           'chart':      chart,
                            'version':    app['version'],
                            'dirname':    dirname
                 }
+                if chart_repo:
+                    if chart_repo not in repos:
+                        logging.warning("Repo '{}' not found in spec file".format(chart_repo))
+                    else:
+                        repo = repos[chart_repo]
+                        new_app['repository'] = repo,
+
+                if not app['enabled']:
+                    logging.info('Skiping disabled deployment {}'.format(app_name))
+                    continue
                 new_app['set'] = app.get('set', dict())
                 new_app['valuesfiles'] = app.get('valuesFiles', [])
                 specs.append(new_app)
@@ -116,10 +124,27 @@ def list_images(app):
 
 # Particularly needed for Helm2 which do not have a --repo argument on 'template'
 def helm_fetch_chart(app, args, tmpdir):
-    logging.debug("Using temp dir: '{}'".format(tmpdir))
-    cmd = '{} fetch --untar --untardir {}/charts --repo {} --version {} {}'.format(args.helm_bin, tmpdir, app['repository'], app['version'], app['chart'])
-    logging.debug('Helm command: {}'.format(cmd))
+    logging.debug("Fetch : Using temp dir: '{}'".format(tmpdir))
+    out = subprocess.check_output('mkdir -p {}/charts'.format(tmpdir), shell=True)
+    found_locally = False
+    if args.local_chart_path:
+        chart = '{}/{}-{}.tgz'.format(args.local_chart_path, app['chart'], app['version'])
+        logging.debug('Looking for local chart: {}'.format(chart))
+        if os.path.exists(chart):
+            cmd = 'tar -xzf {} --directory {}/charts'.format(chart, tmpdir)
+            logging.debug('Tar command: {}'.format(cmd))
+            out = subprocess.check_output(cmd, shell=True)
+            logging.debug(out)
+            found_locally = True
+    if not found_locally:
+        cmd = '{} fetch --untar --untardir {}/charts --repo {} --version {} {}'.format(args.helm_bin, tmpdir, app['repository'], app['version'], app['chart'])
+        logging.debug('Helm command: {}'.format(cmd))
+        out = subprocess.check_output(cmd, shell=True)
+        logging.debug(out)
+    cmd = 'ls -laR {}'.format(tmpdir)
+    logging.debug('Post helm-fetch ls command: {}'.format(cmd))
     out = subprocess.check_output(cmd, shell=True)
+    logging.debug(out)
 
 def get_namespace_resource(args, app):
     return '''
@@ -238,7 +263,7 @@ def run_helm(specs, args):
     subprocess.check_output('helm init {}'.format(args.helm_init_args), shell=True)
 
     tmpdir = tempfile.mkdtemp()
-    logging.debug("Using temp dir: '{}'".format(tmpdir))
+    logging.debug("Run helm: Using temp dir: '{}'".format(tmpdir))
     apps = []
     for app in specs:
         helm_fetch_chart(app, args, tmpdir)
@@ -370,6 +395,7 @@ def main():
                         help='Automatically upgrade API changes, e.g. the 1.16.0 API deprecations')
     parser.add_argument('--no-sort', action='store_true', default=False,
                         help='Sort resources by name')
+    parser.add_argument('--local-chart-path', default='')
 
     subparsers = parser.add_subparsers()
     parser_helmsman = subparsers.add_parser('helmsman')
