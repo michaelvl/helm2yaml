@@ -41,8 +41,7 @@ def parse_helmsman(fname):
                 app = apps['apps'][app_name]
                 logging.debug('App {}: {}'.format(app_name, app))
                 if '/' in app['chart']:
-                    chart_repo = app['chart'].split('/')[0]
-                    chart = app['chart'].split('/')[1]
+                    chart_repo, chart = app['chart'].split('/')
                 else:
                     chart_repo = None
                     chart = app['chart']
@@ -57,7 +56,7 @@ def parse_helmsman(fname):
                         logging.warning("Repo '{}' not found in spec file".format(chart_repo))
                     else:
                         repo = repos[chart_repo]
-                        new_app['repository'] = repo,
+                        new_app['repository'] = repo
 
                 if not app['enabled']:
                     logging.info('Skiping disabled deployment {}'.format(app_name))
