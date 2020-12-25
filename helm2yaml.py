@@ -122,24 +122,22 @@ def list_images(app):
     return img_out
 
 # Particularly needed for Helm2 which do not have a --repo argument on 'template'
-def helm_fetch_chart(app, args, tmpdir):
-    logging.debug("Fetch : Using temp dir: '{}'".format(tmpdir))
-    out = subprocess.check_output('mkdir -p {}/charts'.format(tmpdir), shell=True)
-    found_locally = False
-    if args.local_chart_path:
-        chart = '{}/{}-{}.tgz'.format(args.local_chart_path, app['chart'], app['version'])
-        logging.debug('Looking for local chart: {}'.format(chart))
-        if os.path.exists(chart):
-            cmd = 'tar -xzf {} --directory {}/charts'.format(chart, tmpdir)
-            logging.debug('Tar command: {}'.format(cmd))
-            out = subprocess.check_output(cmd, shell=True)
-            logging.debug(out)
-            found_locally = True
-    if not found_locally:
-        cmd = '{} fetch --untar --untardir {}/charts --repo {} --version {} {}'.format(args.helm_bin, tmpdir, app['repository'], app['version'], app['chart'])
+def helm_fetch_chart(app, args, chartdir, tmpdir):
+    logging.debug("Fetch : Using chart dir: '{}'".format(chartdir))
+    chart = '{}/{}-{}.tgz'.format(chartdir, app['chart'], app['version'])
+    if os.path.exists(chart):
+        logging.info('Using local chart: {}'.format(chart))
+    else:
+        cmd = '{} fetch --destination {} --repo {} --version {} {}'.format(args.helm_bin, chartdir, app['repository'], app['version'], app['chart'])
         logging.debug('Helm command: {}'.format(cmd))
         out = subprocess.check_output(cmd, shell=True)
         logging.debug(out)
+
+    cmd = 'tar -xzf {} --directory {}'.format(chart, tmpdir)
+    logging.debug('Tar command: {}'.format(cmd))
+    out = subprocess.check_output(cmd, shell=True)
+    logging.debug(out)
+
     cmd = 'ls -laR {}'.format(tmpdir)
     logging.debug('Post helm-fetch ls command: {}'.format(cmd))
     out = subprocess.check_output(cmd, shell=True)
@@ -259,16 +257,22 @@ def resource_list(header, res):
         logging.debug('Resource {}/{}/{}'.format(api, kind, name))
 
 def run_helm(specs, args):
-    subprocess.check_output('helm init {}'.format(args.helm_init_args), shell=True)
-
     tmpdir = tempfile.mkdtemp()
-    logging.debug("Run helm: Using temp dir: '{}'".format(tmpdir))
+    out = subprocess.check_output('mkdir -p {}'.format(tmpdir), shell=True)
+    logging.debug("Run helm: Using tmp dir: '{}'".format(tmpdir))
+
+    if args.local_chart_path:
+        chartdir = args.local_chart_path
+    else:
+        chartdir = tempfile.mkdtemp()+'/charts'
+    logging.debug("Run helm: Using chart dir: '{}'".format(tmpdir))
+
     apps = []
     for app in specs:
-        helm_fetch_chart(app, args, tmpdir)
-        cmd = '{} template {} --namespace {}'.format(args.helm_bin, app['rel_name'], app['namespace'])
+        helm_fetch_chart(app, args, chartdir, tmpdir)
+        cmd = '{} template --include-crds {} --namespace {}'.format(args.helm_bin, app['rel_name'], app['namespace'])
         if args.kube_version:
-            cmd += ' --kube-version {} {}/charts/{}'.format(args.kube_version)
+            cmd += ' --kube-version {}'.format(args.kube_version)
         for apiver in args.api_versions:
             cmd += ' --api-versions {}'.format(apiver)
         for k,v in app['set'].items():
@@ -284,7 +288,7 @@ def run_helm(specs, args):
                     logging.debug('Env expanded values in file {}:\n{}'.format(vf, dst))
                     vfn_dst.write(dst)
             cmd += ' --values {}/{}'.format(tmpdir, vf)
-        cmd += ' {}/charts/{}'.format(tmpdir, app['chart'])
+        cmd += ' {}/{}'.format(tmpdir, app['chart'])
         logging.debug('Helm command: {}'.format(cmd))
         out = subprocess.check_output(cmd, shell=True)
         out = out.decode('UTF-8','ignore')
