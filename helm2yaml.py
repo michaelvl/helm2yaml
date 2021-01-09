@@ -157,25 +157,19 @@ def resource_filter(res, args):
     if args.hook_filter:
         logging.debug("Hook filter using '{}'".format(args.hook_filter))
         for r in res:
-            match = False
+            remove = False
             if 'metadata' in r and 'annotations' in r['metadata']:
                 anno = r['metadata']['annotations']
                 logging.debug('Resource {}/{} annotations: {}'.format(r['kind'], r['metadata']['name'], anno))
                 if anno and helm_hook_anno in anno:
                     if anno[helm_hook_anno] in args.hook_filter:
-                        logging.debug('Resource {}/{} annotation value {} matched'.format(r['kind'], r['metadata']['name'], anno[helm_hook_anno]))
-                        match = True
-                else: # No hook annotation
-                    if len(args.hook_filter)==1 and args.hook_filter[0]=='':
-                        match = True
-            else: # No annotation
-                if len(args.hook_filter)==1 and args.hook_filter[0]=='':
-                    match = True
-            if match:
+                        logging.debug('Resource {}/{} annotation value {} matched filter, skipping'.format(r['kind'], r['metadata']['name'], anno[helm_hook_anno]))
+                        remove = True
+            if remove:
+                logging.info('Filtering resource {}/{}'.format(r['kind'], r['metadata']['name']))
+            else:
                 logging.debug('Resource {}/{} matched'.format(r['kind'], r['metadata']['name']))
                 out.append(r)
-            else:
-                logging.info('Filtering resource {}/{}'.format(r['kind'], r['metadata']['name']))
     else:
         return res
     return out
