@@ -26,6 +26,14 @@ installed already and the values we specify for the configuration. With all
 these moving parts, the resulting YAML should be retained similarly to how we
 retain the binary artifact from source-code compilation.
 
+By rendering Helm charts as part of the CI process, we make our Kubernetes
+blue-prints simpler because they are based on native Kubernetes resources like
+`Deployments`, `ConfigMaps` and `Service`. This introduces less moving parts in
+the deployment from Git to Kubernetes and thus improves stability of that
+process.
+
+> Make your Kubernetes blueprints as simple as possible, but not simpler.
+
 Kubernetes PodSecurityPolicies allow specifying policies for applications we
 deploy to Kubernetes.  With CI/CD we try to 'shift-left', i.e. perform
 validation early and fail early. With Helm, the application deployment will not
