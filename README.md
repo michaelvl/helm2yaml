@@ -32,7 +32,7 @@ blue-prints simpler because they are based on native Kubernetes resources like
 the deployment from Git to Kubernetes and thus improves stability of that
 process.
 
-> Make your Kubernetes blueprints as simple as possible, but not simpler.
+> Make your Kubernetes blueprints as simple as possible, but no simpler.
 
 Kubernetes PodSecurityPolicies allow specifying policies for applications we
 deploy to Kubernetes.  With CI/CD we try to 'shift-left', i.e. perform
