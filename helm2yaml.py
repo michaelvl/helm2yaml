@@ -195,23 +195,6 @@ def resource_api_upgrade(res, args):
                     r['apiVersion'] = upg['api']['to']
     return res
 
-def resource_sort(res, args):
-    '''Sort resource list by resource name, but without changing overall resource kind sorting'''
-    if args.no_sort:
-        return res
-    out = []
-    tmp = []
-    last_kind = None
-    for r in res:
-        kind = r['kind']
-        if last_kind and kind != last_kind:
-            out += sorted(tmp, key=lambda r: r['metadata']['name'])
-            tmp = []
-        tmp.append(r)
-        last_kind = kind
-    out += sorted(tmp, key=lambda r: r['metadata']['name'])
-    return out
-
 def resource_split_ns_no_ns(res, args):
     '''Split resource into a list of those that have a specific namespace and those without namespace'''
     out = []
@@ -258,7 +241,7 @@ def run_helm(specs, args):
     if args.local_chart_path:
         chartdir = args.local_chart_path
     else:
-        chartdir = tempfile.mkdtemp()+'/charts'
+        chartdir = tmpdir
     logging.debug("Run helm: Using chart dir: '{}'".format(tmpdir))
 
     apps = []
@@ -328,10 +311,6 @@ def run_helm(specs, args):
         apps.append(secrets)
         apps.append(secrets_ns)
 
-        res = resource_sort(res, args)
-        res_ns = resource_sort(res_ns, args)
-        secrets = resource_sort(secrets, args)
-        secrets_ns = resource_sort(secrets_ns, args)
         resource_list('Render-ready resources without explicit namespace', res)
         resource_list('Render-ready resources with explicit namespace', res_ns)
         resource_list('Render-ready secrets without explicit namespace', secrets)

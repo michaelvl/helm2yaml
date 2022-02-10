@@ -7,7 +7,7 @@ This repository contain tools for implementing GitOps with Helm.
 The shortcomings of `helm template` are:
 
 - It does not support Helm hooks. This means too many resources are rendered.
-- The order of resources within a given Kubernetes kind is random and changes between different helm invocations. This break GitOps diff.
+- The order of resources within a given Kubernetes kind is random and changes between different helm invocations. This break GitOps diff. **[This was solved in Helm 3.1.0](https://github.com/helm/helm/pull/6842)**
 - All resources are rendered into one output which makes it difficult to seal secrets.
 - Resources do not have their namespace explicitly set unless the chart does this itself.
 - Helm does not have a declarative spec for application configuration (e.g. like Helmsman or Helmsfile)
@@ -202,26 +202,6 @@ different YAML files by running `helm2yaml` three times with different filtering
 settings. Use `--hook-filter` to specify filtered resources. Hook filters are
 values to compare to the value of annotation `helm.sh/hook`. An empty string
 matches resources with no such annotation.
-
-### Sorting Resources
-
-Helm sorts resources by kind, however, Helm does not sort resources of the same
-kind, and in some cases the order of resources output from `helm template` may
-change.  E.g.:
-
-```
-$ helm3 version
-version.BuildInfo{Version:"v3.0.2", GitCommit:"19e47ee3283ae98139d98460de796c1be1e3975f" ...
-$ helm3 template --version "0.12.0" --repo "https://kubernetes-charts.storage.googleapis.com" metallb >m1
-$ helm3 template --version "0.12.0" --repo "https://kubernetes-charts.storage.googleapis.com" metallb >m2
-$ diff -q m1 m2
-Files m1 and m2 differ
-```
-
-This is not ideal in a render pipeline and to mitigate this, `helm2yaml` by
-default sorts resources of the same kind on their name. This results in a
-consistent output from `helm2yaml` which does not change between different
-invocations.  This feature can be disabled using the argument `--no-sort`.
 
 ### Automatic API Upgrade
 
