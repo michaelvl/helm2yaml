@@ -1,6 +1,6 @@
 FROM python:3.7.4-slim-stretch
 
-ARG HELM_VERSION="v3.6.3"
+ARG HELM_VERSION="v3.8.0"
 ENV HELM_VERSION=$HELM_VERSION
 
 RUN apt-get -y update && apt-get install -y curl && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
