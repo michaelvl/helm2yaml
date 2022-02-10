@@ -114,7 +114,7 @@ using e.g. [conftest](https://github.com/MichaelVL/kubernetes-rego-tests). E.g.
 ```
 # First render the final YAML based on a Helmsman application spec
 $ mkdir rendered
-$ docker run --rm --user `id -u`:`id -g` -e HOME=/tmp/home -v $PWD:/src -v $PWD/rendered:/rendered michaelvl/helm2yaml helmsman -f examples/prometheus.yaml
+$ docker run --rm --user `id -u`:`id -g` -e HOME=/tmp/home -v $PWD:/src -v $PWD/rendered:/rendered ghcr.io/michaelvl/helm2yaml helmsman -f examples/prometheus.yaml
 # Then run conftest/Rego-based audits to validate the YAML
 cat rendered/prometheus.yaml | docker run -i --rm michaelvl/conftest-kubernetes | grep FAIL
 ```
