@@ -65,18 +65,18 @@ Helm release name. With a Helmsman application spec, the YAML can be rendered as
 follows>
 
 ```
-helm2yaml.py helmsman -f helmsman-app-spec.yaml
-kubectl apply -f final-app.yaml
+helm2yaml.py helmsman -f examples/prometheus.yaml --render-path rendered
+kubectl apply -f rendered/
 ```
 
 Similarly with FluxCD application specs:
 
 ```
-helm2yaml.py fluxcd -f fluxcd-app-spec.yaml
-kubectl apply -f final-app.yaml
+helm2yaml.py fluxcd -f fluxcd-app-spec.yaml --render-path rendered
+kubectl apply -f rendered/
 ```
 
-and here `final-app.yaml` could be retained for the audit trail.  If the final
+and here files in `rendered` could be retained for the audit trail.  If the final
 YAML is retained in e.g. git, the `kubectl apply` command could be replaced by
 deployment on Kubernetes with Flux in a non-Helm mode, i.e. GitOps with an audit
 trail.
