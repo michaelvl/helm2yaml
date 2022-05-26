@@ -80,7 +80,7 @@ def helmsman2krmfmt(specs, outfname):
         if len(specs[0]['valuesfiles'])==1:
             print('  valuesFile: {}'.format(specs[0]['valuesfiles'][0]), file=fh)
         elif len(specs[0]['valuesfiles'])>1:
-            print('  valuesFiles:') # This is an extension - format does not support lists
+            print('  valuesFiles:', file=fh) # This is an extension - format does not support lists
             for fn in specs[0]['valuesfiles']:
                 print('  - {}'.format(fn), file=fh)
         if specs[0]['set']:
