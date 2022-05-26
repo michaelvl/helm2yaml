@@ -85,7 +85,9 @@ def helmsman2krmfmt(specs, outfname):
                 print('  - {}'.format(fn), file=fh)
         if specs[0]['set']:
             print('  valuesInline:', file=fh)
-            print(yaml.dump(specs[0]['set'], indent='  '), file=fh)
+            y = yaml.dump(specs[0]['set'], default_flow_style=False)
+            for ln in str(y).split('\n'):
+                print('    '+ln, file=fh)
 
 # https://catalog.kpt.dev/render-helm-chart/v0.1/
 def parse_krm(fname):
