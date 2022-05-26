@@ -66,6 +66,55 @@ def parse_helmsman(fname):
                 specs.append(new_app)
     return specs
 
+# Export Helmsman as KRM format
+# https://catalog.kpt.dev/render-helm-chart/v0.1/
+def helmsman2krmfmt(specs, outfname):
+    logging.debug('Parsed Helmsman spec: {}'.format(pprint.pformat(specs)))
+    with fopener(outfname) as fh:
+        print('helmCharts:', file=fh)
+        prefix = '- '
+        for ka,kb in [('name', 'chart'), ('version', 'version'), ('repo', 'repository'),
+                                          ('releaseName','rel_name'), ('namespace','namespace')]:
+            print('{}{}: {}'.format(prefix, ka, specs[0][kb]), file=fh)
+            prefix = '  '
+        if len(specs[0]['valuesfiles'])==1:
+            print('  valuesFile: {}'.format(specs[0]['valuesfiles'][0]), file=fh)
+        elif len(specs[0]['valuesfiles'])>1:
+            print('  valuesFiles:') # This is an extension - format does not support lists
+            for fn in specs[0]['valuesfiles']:
+                print('  - {}'.format(fn), file=fh)
+        if specs[0]['set']:
+            print('  valuesInline:', file=fh)
+            print(yaml.dump(specs[0]['set'], indent='  '), file=fh)
+
+# https://catalog.kpt.dev/render-helm-chart/v0.1/
+def parse_krm(fname):
+    specs = []
+    repo = {}
+    dirname = os.path.dirname(fname)
+    if dirname == '':
+        dirname = '.'
+    logging.debug("Loading KRM spec '{}'. Dirname '{}'".format(fname, dirname))
+    with open(fname, 'r') as fs:
+        apps = yaml.load(fs, Loader=yaml.FullLoader)
+        repos = apps.get('helmRepos', dict())
+        if 'helmCharts' in apps:
+            for app in apps['helmCharts']:
+                new_app = {'rel_name':   app['releaseName'],
+                           'namespace':  app['namespace'],
+                           'chart':      app['name'],
+                           'repository': app['repo'],
+                           'version':    app['version'],
+                           'dirname':    dirname
+                }
+                new_app['set'] = app.get('valuesInline', dict())
+                if 'valuesFile' in app:
+                    new_app['valuesfiles'] = [app['valuesFile']]
+                else:
+                    new_app['valuesfiles'] = app.get('valuesFiles', []) # Extension, format does not support lists
+                specs.append(new_app)
+    return specs
+
 def parse_flux(fname):
     specs = []
     repo = {}
@@ -234,6 +283,9 @@ def resource_list(header, res):
         logging.debug('Resource {}/{}/{}'.format(api, kind, name))
 
 def run_helm(specs, args):
+    if args.skip_helm:
+        return []
+
     tmpdir = tempfile.mkdtemp()
     out = subprocess.check_output('mkdir -p {}'.format(tmpdir), shell=True)
     logging.debug("Run helm: Using tmp dir: '{}'".format(tmpdir))
@@ -335,6 +387,8 @@ def do_helmsman(args):
     for fn in args.helmsman:
         specs = parse_helmsman(fn)
         logging.debug('Parsed Helmsman spec: {}'.format(pprint.pformat(specs)))
+        if args.export_krm:
+            helmsman2krmfmt(specs, args.export_krm)
         return run_helm(specs, args)
 
 def do_flux(args):
@@ -342,6 +396,13 @@ def do_flux(args):
     for fn in args.flux:
         specs = parse_flux(fn)
         logging.debug('Parsed Flux spec: {}'.format(pprint.pformat(specs)))
+        return run_helm(specs, args)
+
+def do_krm(args):
+    logging.debug('KRM spec files: {}'.format(args.krm))
+    for fn in args.krm:
+        specs = parse_krm(fn)
+        logging.debug('Parsed KRM spec: {}'.format(pprint.pformat(specs)))
         return run_helm(specs, args)
 
 
@@ -372,19 +433,25 @@ def main():
     parser.add_argument('--no-sort', action='store_true', default=False,
                         help='Sort resources by name')
     parser.add_argument('--local-chart-path', default='')
+    parser.add_argument('--skip-helm', default=False, action='store_true')
 
     subparsers = parser.add_subparsers()
     parser_helmsman = subparsers.add_parser('helmsman')
     parser_helmsman.set_defaults(func=do_helmsman)
     parser_fluxcd = subparsers.add_parser('fluxcd')
     parser_fluxcd.set_defaults(func=do_flux)
+    parser_krm = subparsers.add_parser('krm')
+    parser_krm.set_defaults(func=do_krm)
     
     parser_helmsman.add_argument('-f', dest='helmsman', action='append', default=[])
     parser_helmsman.add_argument('--apply', default=False, dest='helmsman_apply', action='store_true', help='Dummy, for compatibility with Helmsman')
     parser_helmsman.add_argument('--no-banner', action='store_true', help='Dummy, for compatibility with Helmsman')
     parser_helmsman.add_argument('--keep-untracked-releases', action='store_true', help='Dummy, for compatibility with Helmsman')
+    parser_helmsman.add_argument('--export-krm', help='Export KRM format spec filename')
 
     parser_fluxcd.add_argument('-f', dest='flux', action='append', default=[])
+
+    parser_krm.add_argument('-f', dest='krm', action='append', default=[])
 
     args = parser.parse_args()
     logging.getLogger('').setLevel(getattr(logging, args.log_level))
