@@ -145,7 +145,8 @@ def parse_krm(fname):
                 if 'values' in templateOptions:
                     values = templateOptions['values']
                     new_app['set'] = values.get('valuesInline', dict())
-                    new_app['valuesfiles'] = values.get('valuesFile', [])
+                    new_app['valuesfiles'] = []
+                    new_app['valuesfiles'] += [values.get('valuesFile', None)]
                     new_app['valuesfiles'] += values.get('valuesFiles', [])
                 specs.append(new_app)
             else:  # assume v0.1.0 format
@@ -158,10 +159,9 @@ def parse_krm(fname):
                            'dirname':    dirname
                 }
                 new_app['set'] = app.get('valuesInline', dict())
-                if 'valuesFile' in app:
-                    new_app['valuesfiles'] = [app['valuesFile']]
-                else:
-                    new_app['valuesfiles'] = app.get('valuesFiles', []) # Extension, v0.1.0 format does not support lists
+                new_app['valuesfiles'] = []
+                new_app['valuesfiles'] += [app.get('valuesFile', None)]
+                new_app['valuesfiles'] += app.get('valuesfiles', []) # Extension, v0.1.0 format does not support lists
                 specs.append(new_app)
     return specs,version
 
