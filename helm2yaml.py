@@ -66,10 +66,38 @@ def parse_helmsman(fname):
                 specs.append(new_app)
     return specs
 
-# Export Helmsman as KRM format
-# https://catalog.kpt.dev/render-helm-chart/v0.1/
-def helmsman2krmfmt(specs, outfname):
-    logging.debug('Parsed Helmsman spec: {}'.format(pprint.pformat(specs)))
+# Export chart spec as KRM format
+# See
+#  - https://catalog.kpt.dev/render-helm-chart/v0.1/?id=render-helm-chart
+#  - https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/render-helm-chart
+def export_krmfmt(specs, outfname):
+    logging.debug('Parsed chart spec: {}'.format(pprint.pformat(specs)))
+    #return export_krmfmt_0_1_0(specs, outfname)
+    return export_krmfmt_0_2_0(specs, outfname)
+
+def export_krmfmt_0_2_0(specs, outfname):
+    with fopener(outfname) as fh:
+        print('helmCharts:', file=fh)
+        print('- chartArgs:', file=fh)
+        for ka,kb in [('name', 'chart'), ('version', 'version'), ('repo', 'repository')]:
+            print('    {}: {}'.format(ka, specs[0][kb]), file=fh)
+        print('  templateOptions:', file=fh)
+        for ka,kb in [('releaseName','rel_name'), ('namespace','namespace')]:
+            print('    {}: {}'.format(ka, specs[0][kb]), file=fh)
+        print('    values:', file=fh)
+        if len(specs[0]['valuesfiles'])==1:
+            print('      valuesFile: {}'.format(specs[0]['valuesfiles'][0]), file=fh)
+        elif len(specs[0]['valuesfiles'])>1:
+            print('      valuesFiles:', file=fh)
+            for fn in specs[0]['valuesfiles']:
+                print('      - {}'.format(fn), file=fh)
+        if specs[0]['set']:
+            print('      valuesInline:', file=fh)
+            y = yaml.dump(specs[0]['set'], default_flow_style=False)
+            for ln in str(y).split('\n'):
+                print('        '+ln, file=fh)
+
+def export_krmfmt_0_1_0(specs, outfname):
     with fopener(outfname) as fh:
         print('helmCharts:', file=fh)
         prefix = '- '
@@ -89,6 +117,7 @@ def helmsman2krmfmt(specs, outfname):
             for ln in str(y).split('\n'):
                 print('    '+ln, file=fh)
 
+# https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/render-helm-chart
 # https://catalog.kpt.dev/render-helm-chart/v0.1/
 def parse_krm(fname):
     specs = []
@@ -99,9 +128,28 @@ def parse_krm(fname):
     logging.debug("Loading KRM spec '{}'. Dirname '{}'".format(fname, dirname))
     with open(fname, 'r') as fs:
         apps = yaml.load(fs, Loader=yaml.FullLoader)
-        repos = apps.get('helmRepos', dict())
-        if 'helmCharts' in apps:
-            for app in apps['helmCharts']:
+        for app in apps.get('helmCharts', []):
+            if 'templateOptions' in app and 'chartArgs' in app:   # v0.2.0 format
+                version = '0.2.0'
+                templateOptions = app['templateOptions']
+                chartArgs = app['chartArgs']
+                new_app = {'rel_name':   templateOptions['releaseName'],
+                           'namespace':  templateOptions['namespace'],
+                           'chart':      chartArgs['name'],
+                           'repository': chartArgs['repo'],
+                           'version':    chartArgs['version'],
+                           'dirname':    dirname
+                }
+                if 'apiVersions' in templateOptions:
+                    new_app['apiVersions'] = templateOptions['apiVersions']
+                if 'values' in templateOptions:
+                    values = templateOptions['values']
+                    new_app['set'] = values.get('valuesInline', dict())
+                    new_app['valuesfiles'] = values.get('valuesFile', [])
+                    new_app['valuesfiles'] += values.get('valuesFiles', [])
+                specs.append(new_app)
+            else:  # assume v0.1.0 format
+                version = '0.1.0'
                 new_app = {'rel_name':   app['releaseName'],
                            'namespace':  app['namespace'],
                            'chart':      app['name'],
@@ -113,9 +161,9 @@ def parse_krm(fname):
                 if 'valuesFile' in app:
                     new_app['valuesfiles'] = [app['valuesFile']]
                 else:
-                    new_app['valuesfiles'] = app.get('valuesFiles', []) # Extension, format does not support lists
+                    new_app['valuesfiles'] = app.get('valuesFiles', []) # Extension, v0.1.0 format does not support lists
                 specs.append(new_app)
-    return specs
+    return specs,version
 
 def parse_flux(fname):
     specs = []
@@ -306,12 +354,12 @@ def run_helm(specs, args):
             cmd += ' --kube-version {}'.format(args.kube_version)
         for apiver in args.api_versions:
             cmd += ' --api-versions {}'.format(apiver)
-        for k,v in app['set'].items():
+        for k,v in app.get('set', dict()).items():
             if type(v) is str:
                 cmd += " --set {}='{}'".format(k,string.Template(v).safe_substitute(os.environ))
             else:
                 cmd += ' --set {}={}'.format(k,v)
-        for vf in app['valuesfiles']:
+        for vf in app.get('valuesfiles', []):
             with open('{}/{}'.format(tmpdir, vf), 'w') as vfn_dst:
                 with open('{}/{}'.format(app['dirname'], vf), 'r') as vfn_src:
                     src = vfn_src.read()
@@ -390,7 +438,7 @@ def do_helmsman(args):
         specs = parse_helmsman(fn)
         logging.debug('Parsed Helmsman spec: {}'.format(pprint.pformat(specs)))
         if args.export_krm:
-            helmsman2krmfmt(specs, args.export_krm)
+            export_krmfmt(specs, args.export_krm)
         return run_helm(specs, args)
 
 def do_flux(args):
@@ -403,8 +451,10 @@ def do_flux(args):
 def do_krm(args):
     logging.debug('KRM spec files: {}'.format(args.krm))
     for fn in args.krm:
-        specs = parse_krm(fn)
+        specs,krm_version = parse_krm(fn)
         logging.debug('Parsed KRM spec: {}'.format(pprint.pformat(specs)))
+        if args.export_upgraded_krm:
+            export_krmfmt(specs, args.export_upgraded_krm)
         return run_helm(specs, args)
 
 
@@ -454,6 +504,7 @@ def main():
     parser_fluxcd.add_argument('-f', dest='flux', action='append', default=[])
 
     parser_krm.add_argument('-f', dest='krm', action='append', default=[])
+    parser_krm.add_argument('--export-upgraded-krm', help='Export upgraded KRM format spec filename')
 
     args = parser.parse_args()
     logging.getLogger('').setLevel(getattr(logging, args.log_level))
