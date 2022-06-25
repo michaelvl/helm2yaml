@@ -1,0 +1,15 @@
+# KRM function 'render-helm-chart' format
+# See https://catalog.kpt.dev/render-helm-chart/v0.1/?id=render-helm-chart
+
+helmCharts:
+- name: prometheus
+  version: 15.5.3
+  repo: https://prometheus-community.github.io/helm-charts
+  releaseName: prometheus
+  namespace: monitoring-prometheus
+  valuesInline:
+    rbac.create: true
+    alertmanager.enabled: false
+    pushgateway.enabled: false,
+    networkPolicy.enabled: true
+    server.retention: '7d'

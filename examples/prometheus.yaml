@@ -9,7 +9,7 @@ namespaces:
 apps:
   prometheus:
     chart: prometheus-community/prometheus
-    version: 14.6.0
+    version: 15.5.3
     enabled: true
     namespace: monitoring-prometheus
     set:

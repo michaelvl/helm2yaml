@@ -10,7 +10,7 @@ The shortcomings of `helm template` are:
 - The order of resources within a given Kubernetes kind is random and changes between different helm invocations. This break GitOps diff. **[This was solved in Helm 3.1.0](https://github.com/helm/helm/pull/6842)**
 - All resources are rendered into one output which makes it difficult to seal secrets.
 - Resources do not have their namespace explicitly set unless the chart does this itself.
-- Helm does not have a declarative spec for application configuration (e.g. like Helmsman or Helmsfile)
+- Helm does not have a declarative spec for application configuration, e.g. like Helmsman or Helmsfile or [KRM functions](https://catalog.kpt.dev/render-helm-chart/v0.1/?id=render-helm-chart)
 
 The tool `helm2yaml` have solutions for these issues.
 
@@ -61,8 +61,17 @@ was actually deployed and such that we can be sure we can re-deploy the
 application without having to re-run Helm to re-render the YAML.
 
 With the helm2yaml tool, the final YAML will be written to file named from the
-Helm release name. With a Helmsman application spec, the YAML can be rendered as
-follows>
+Helm release name.
+
+To render a Helm chart defined using the [KRM function render-helm-chart spec](https://catalog.kpt.dev/render-helm-chart/v0.1/?id=render-helm-chart):
+
+```
+helm2yaml.py krm -f examples/krm-prometheus.yaml --render-path rendered
+kubectl apply -f rendered/
+```
+
+With a Helmsman application spec, the YAML can be rendered as
+follows:
 
 ```
 helm2yaml.py helmsman -f examples/prometheus.yaml --render-path rendered
