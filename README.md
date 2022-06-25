@@ -63,7 +63,7 @@ application without having to re-run Helm to re-render the YAML.
 With the helm2yaml tool, the final YAML will be written to file named from the
 Helm release name.
 
-To render a Helm chart defined using the [KRM function render-helm-chart spec](https://catalog.kpt.dev/render-helm-chart/v0.1/?id=render-helm-chart):
+To render a Helm chart defined using the [KRM function render-helm-chart spec](https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/render-helm-chart):
 
 ```
 helm2yaml.py krm -f examples/krm-prometheus.yaml --render-path rendered
