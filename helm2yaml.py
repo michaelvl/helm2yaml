@@ -77,6 +77,12 @@ def export_krmfmt(specs, outfname):
 
 def export_krmfmt_0_2_0(specs, outfname):
     with fopener(outfname) as fh:
+        print('apiVersion: fn.kpt.dev/v1alpha1', file=fh)
+        print('kind: RenderHelmChart', file=fh)
+        print('metadata:', file=fh)
+        print('  name: render-chart', file=fh)
+        print('  annotations:', file=fh)
+        print('    config.kubernetes.io/local-config: "true"', file=fh)
         print('helmCharts:', file=fh)
         print('- chartArgs:', file=fh)
         for ka,kb in [('name', 'chart'), ('version', 'version'), ('repo', 'repository')]:
