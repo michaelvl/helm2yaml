@@ -499,7 +499,7 @@ def main():
     parser.add_argument('--render-path', default='rendered')
     parser.add_argument('--add-namespace-to-path', default=False, action='store_true',
                         help='Add destination namespace to rendered files')
-    parser.add_argument('--add-namespace', default=False, help='Add namespace resource')
+    parser.add_argument('--add-namespace', default=False, action='store_true', help='Add namespace resource')
     parser.add_argument('--namespace-filename-prefix', default='00-',
                         help='Prefix for namespace filename')
     parser.add_argument('--separate-with-namespace', default=False, action='store_true',
