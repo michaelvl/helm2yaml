@@ -1,0 +1,16 @@
+apiVersion: fn.kpt.dev/v1alpha1
+kind: RenderHelmChart
+metadata:
+  name: render-chart
+  annotations:
+    config.kubernetes.io/local-config: "true"
+helmCharts:
+- chartArgs:
+    name: argo-cd
+    version: 4.9.11
+    repo: https://argoproj.github.io/argo-helm
+  templateOptions:
+    releaseName: argocd
+    namespace: argocd
+    values:
+      valuesFile: values-argocd.yaml

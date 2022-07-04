@@ -26,6 +26,19 @@ def fopener(filename=None):
         if fh is not sys.stdout:
             fh.close()
 
+@contextlib.contextmanager
+def fopener_read(filename=None):
+    if filename and filename != '-':
+        fh = open(filename, 'r')
+    else:
+        fh = sys.stdin
+
+    try:
+        yield fh
+    finally:
+        if fh is not sys.stdin:
+            fh.close()
+
 def parse_helmsman(fname):
     specs = []
     repo = {}
@@ -132,8 +145,11 @@ def parse_krm(fname):
     if dirname == '':
         dirname = '.'
     logging.debug("Loading KRM spec '{}'. Dirname '{}'".format(fname, dirname))
-    with open(fname, 'r') as fs:
+    with fopener_read(fname) as fs:
         apps = yaml.load(fs, Loader=yaml.FullLoader)
+        if 'kind' in apps and apps['kind'] == 'ResourceList':
+            # For KRM functions, the Helm chart spec is embedded in 'functionConfig'
+            apps = apps['functionConfig']
         for app in apps.get('helmCharts', []):
             if 'templateOptions' in app and 'chartArgs' in app:   # v0.2.0 format
                 version = '0.2.0'
@@ -425,15 +441,25 @@ def run_helm(specs, args):
         resource_list('Render-ready secrets with explicit namespace', secrets_ns)
 
         if not args.list_images:
-            fnames = [render_to, render_w_ns_to, render_secrets_to, render_secrets_w_ns_to]
-            sources = [res, res_ns, secrets, secrets_ns]
-            for fname, src in zip(fnames, sources):
-                if fname and len(src)>0:
-                    with fopener(fname) as fh:
-                        for r in src:
-                            print(yaml.dump(r), file=fh)
-                            print('---', file=fh)
-            if render_namespace_to:
+            if args.output=='unwrap':
+                fnames = [render_to, render_w_ns_to, render_secrets_to, render_secrets_w_ns_to]
+                sources = [res, res_ns, secrets, secrets_ns]
+                for fname, src in zip(fnames, sources):
+                    if fname and len(src)>0:
+                        fname = '-'
+                        with fopener(fname) as fh:
+                            for r in src:
+                                print(yaml.dump(r), file=fh)
+                                print('---', file=fh)
+            if args.output=='stdout':
+                fname = '-'
+                with fopener(fname) as fh:
+                    print('apiVersion: config.kubernetes.io/v1', file=fh)
+                    print('kind: ResourceList', file=fh)
+                    #print('items:', file=fh)
+                    #  for r in src:
+                    print(yaml.dump({'items': res + res_ns + secrets + secrets_ns}), file=fh)
+            if args.add_namespace and render_namespace_to:
                 with fopener(render_namespace_to) as fh:
                     print(get_namespace_resource(args, app), file=fh)
     return apps
@@ -473,6 +499,7 @@ def main():
     parser.add_argument('--render-path', default='rendered')
     parser.add_argument('--add-namespace-to-path', default=False, action='store_true',
                         help='Add destination namespace to rendered files')
+    parser.add_argument('--add-namespace', default=False, help='Add namespace resource')
     parser.add_argument('--namespace-filename-prefix', default='00-',
                         help='Prefix for namespace filename')
     parser.add_argument('--separate-with-namespace', default=False, action='store_true',
@@ -492,6 +519,7 @@ def main():
                         help='Sort resources by name')
     parser.add_argument('--local-chart-path', default='')
     parser.add_argument('--skip-helm', default=False, action='store_true')
+    parser.add_argument('-o', '--output', default='file', choices=['file', 'stdout', 'unwrap'])
 
     subparsers = parser.add_subparsers()
     parser_helmsman = subparsers.add_parser('helmsman')
@@ -513,6 +541,7 @@ def main():
     parser_krm.add_argument('--export-upgraded-krm', help='Export upgraded KRM format spec filename')
 
     args = parser.parse_args()
+    logging.basicConfig(stream=sys.stderr)
     logging.getLogger('').setLevel(getattr(logging, args.log_level))
 
     logging.debug('Env variables: {}'.format(pprint.pformat(os.environ)))
