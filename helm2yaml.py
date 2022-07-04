@@ -441,12 +441,13 @@ def run_helm(specs, args):
         resource_list('Render-ready secrets with explicit namespace', secrets_ns)
 
         if not args.list_images:
-            if args.output=='unwrap':
+            if args.output=='unwrap' or args.output=='file':
                 fnames = [render_to, render_w_ns_to, render_secrets_to, render_secrets_w_ns_to]
                 sources = [res, res_ns, secrets, secrets_ns]
                 for fname, src in zip(fnames, sources):
                     if fname and len(src)>0:
-                        fname = '-'
+                        if args.output=='unwrap':
+                            fname = '-'
                         with fopener(fname) as fh:
                             for r in src:
                                 print(yaml.dump(r), file=fh)

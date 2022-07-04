@@ -11,7 +11,7 @@ clean-rendered:
 
 .PHONY: test1
 test1: clean-rendered
-	(cd examples && cat krm-input.yaml | ../helm2yaml.py -l DEBUG krm -f -)
+	(cd examples && cat krm-input.yaml | ../helm2yaml.py -l DEBUG --render-path ../rendered krm -f -)
 
 .PHONY: test1-stdout
 test1-stdout: clean-rendered
