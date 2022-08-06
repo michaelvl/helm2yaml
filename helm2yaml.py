@@ -171,7 +171,7 @@ def parse_krm(fname):
                 if 'values' in templateOptions:
                     values = templateOptions['values']
                     new_app['set'] = values.get('valuesInline', dict())
-                    if 'valuesFile' in app:
+                    if 'valuesFile' in values:
                         new_app['valuesfiles'] += [values.get('valuesFile')]
                     new_app['valuesfiles'] += values.get('valuesFiles', [])
                 specs.append(new_app)
