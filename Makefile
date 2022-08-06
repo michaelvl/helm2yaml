@@ -20,3 +20,11 @@ test1-stdout: clean-rendered
 .PHONY: test2
 test2: clean-rendered
 	(cd rendered && kpt fn eval --image $(IMAGE) --truncate-output=false --network --as-current-user --fn-config ../examples/fn-config.yaml --mount type=bind,src=`pwd`"/../examples/",dst=/source -o unwrap)
+
+.PHONY: test3
+test3: clean-rendered
+	(cd examples && cat krm-kube-prometheus-stack.yaml | ../helm2yaml.py -l DEBUG --skip-helm --render-path ../rendered krm --export-upgraded-krm exported.yaml -f -)
+
+.PHONY: test3-1
+test3-1: clean-rendered
+	(cd examples && cat krm-kube-prometheus-stack.yaml | ../helm2yaml.py -l DEBUG --render-path ../rendered krm -f -)

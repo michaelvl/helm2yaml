@@ -72,7 +72,7 @@ def parse_helmsman(fname):
                         new_app['repository'] = repo
 
                 if not app['enabled']:
-                    logging.info('Skiping disabled deployment {}'.format(app_name))
+                    logging.info('Skipping disabled deployment {}'.format(app_name))
                     continue
                 new_app['set'] = app.get('set', dict())
                 new_app['valuesfiles'] = app.get('valuesFiles', [])
@@ -160,14 +160,15 @@ def parse_krm(fname):
                            'chart':      chartArgs['name'],
                            'repository': chartArgs['repo'],
                            'version':    chartArgs['version'],
-                           'dirname':    dirname
+                           'dirname':    dirname,
+                           'valuesfiles': [],
+                           'set':        {}
                 }
                 if 'apiVersions' in templateOptions:
                     new_app['apiVersions'] = templateOptions['apiVersions']
                 if 'values' in templateOptions:
                     values = templateOptions['values']
                     new_app['set'] = values.get('valuesInline', dict())
-                    new_app['valuesfiles'] = []
                     if 'valuesFile' in app:
                         new_app['valuesfiles'] += [values.get('valuesFile')]
                     new_app['valuesfiles'] += values.get('valuesFiles', [])
@@ -182,7 +183,6 @@ def parse_krm(fname):
                            'dirname':    dirname
                 }
                 new_app['set'] = app.get('valuesInline', dict())
-                new_app['valuesfiles'] = []
                 if 'valuesFile' in app:
                     new_app['valuesfiles'] += [app.get('valuesFile')]
                 new_app['valuesfiles'] += app.get('valuesFiles', []) # Extension, v0.1.0 format does not support lists
