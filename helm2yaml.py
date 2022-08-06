@@ -183,6 +183,7 @@ def parse_krm(fname):
                            'repository': app['repo'],
                            'version':    app['version'],
                            'dirname':    dirname
+                           'valuesfiles': []
                 }
                 new_app['set'] = app.get('valuesInline', dict())
                 if 'valuesFile' in app:
