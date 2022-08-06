@@ -103,7 +103,8 @@ def export_krmfmt_0_2_0(specs, outfname):
         print('  templateOptions:', file=fh)
         for ka,kb in [('releaseName','rel_name'), ('namespace','namespace')]:
             print('    {}: {}'.format(ka, specs[0][kb]), file=fh)
-        print('    values:', file=fh)
+        if len(specs[0]['valuesfiles'])>1 or specs[0]['set']:
+            print('    values:', file=fh)
         if len(specs[0]['valuesfiles'])==1:
             print('      valuesFile: {}'.format(specs[0]['valuesfiles'][0]), file=fh)
         elif len(specs[0]['valuesfiles'])>1:
