@@ -182,7 +182,7 @@ def parse_krm(fname):
                            'chart':      app['name'],
                            'repository': app['repo'],
                            'version':    app['version'],
-                           'dirname':    dirname
+                           'dirname':    dirname,
                            'valuesfiles': []
                 }
                 new_app['set'] = app.get('valuesInline', dict())
