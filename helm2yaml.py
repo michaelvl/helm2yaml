@@ -82,6 +82,7 @@ def parse_helmsman(fname):
 # Export chart spec as KRM format
 # See
 #  - https://catalog.kpt.dev/render-helm-chart/v0.1/?id=render-helm-chart
+#  - https://catalog.kpt.dev/render-helm-chart/v0.2/
 #  - https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/render-helm-chart
 def export_krmfmt(specs, outfname):
     logging.debug('Parsed chart spec: {}'.format(pprint.pformat(specs)))
@@ -103,7 +104,7 @@ def export_krmfmt_0_2_0(specs, outfname):
         print('  templateOptions:', file=fh)
         for ka,kb in [('releaseName','rel_name'), ('namespace','namespace')]:
             print('    {}: {}'.format(ka, specs[0][kb]), file=fh)
-        if len(specs[0]['valuesfiles'])>1 or specs[0]['set']:
+        if len(specs[0]['valuesfiles'])>0 or specs[0]['set']:
             print('    values:', file=fh)
         if len(specs[0]['valuesfiles'])==1:
             print('      valuesFile: {}'.format(specs[0]['valuesfiles'][0]), file=fh)

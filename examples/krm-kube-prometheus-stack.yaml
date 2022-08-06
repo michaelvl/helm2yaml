@@ -12,9 +12,6 @@ helmCharts:
   templateOptions:
     releaseName: prometheus-stack
     namespace: monitoring-prometheus
-    set:
-      grafana:
-        enabled: false
-#    values:
-#      valuesFiles:
-#      - values-prometheus.yaml
+    values:
+      valuesFiles:
+      - values-prometheus-stack.yaml
