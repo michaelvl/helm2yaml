@@ -214,11 +214,18 @@ def parse_flux(fname):
         specs.append(new_app)
     return specs
 
+# Work-around for '=' as unquoted string
+# https://github.com/yaml/pyyaml/issues/89
+# https://github.com/prometheus-operator/prometheus-operator/pull/4897
+class PatchedFullLoader(yaml.FullLoader):
+    yaml_implicit_resolvers = yaml.FullLoader.yaml_implicit_resolvers.copy()
+    yaml_implicit_resolvers.pop("=")
+
 def yaml2dict(app):
     res_out = []
     for res in app.split('\n---\n'):
         res = string.Template(res).safe_substitute(os.environ)
-        res = yaml.load(res, Loader=yaml.FullLoader)
+        res = yaml.load(res, Loader=PatchedFullLoader)
         if res:
             res_out.append(res)
     return res_out
