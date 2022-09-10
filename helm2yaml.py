@@ -261,7 +261,10 @@ def helm_fetch_chart(app, args, chartdir, tmpdir):
     if os.path.exists(chart):
         logging.info('Using local chart: {}'.format(chart))
     else:
-        cmd = '{} fetch --destination {} --repo {} --version {} {}'.format(args.helm_bin, chartdir, app['repository'], app['version'], app['chart'])
+        if app['repository'].startswith('oci://'):
+            cmd = '{} pull {}/{} --destination {} --version {}'.format(args.helm_bin, app['repository'], app['chart'], chartdir, app['version'])
+        else:
+            cmd = '{} pull --repo {} {} --destination {} --version {}'.format(args.helm_bin, app['repository'], app['chart'], chartdir, app['version'])
         logging.debug('Helm command: {}'.format(cmd))
         out = subprocess.check_output(cmd, shell=True)
         logging.debug(out)
