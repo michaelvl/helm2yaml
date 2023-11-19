@@ -1,4 +1,4 @@
-FROM python:3.7.4-slim-stretch
+FROM python:3.12.0-slim-bullseye
 
 ARG HELM_VERSION="v3.9.4"
 ENV HELM_VERSION=$HELM_VERSION
