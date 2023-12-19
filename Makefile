@@ -28,3 +28,21 @@ test3: clean-rendered
 .PHONY: test3-1
 test3-1: clean-rendered
 	(cd examples && cat krm-kube-prometheus-stack.yaml | ../helm2yaml.py -l DEBUG --render-path ../rendered krm -f -)
+
+.PHONY: test4
+test4: clean-rendered
+	(cd examples && cat krm-metrics-server.yaml | ../helm2yaml.py -l DEBUG --skip-helm --render-path ../rendered krm --export-upgraded-krm exported.yaml -f -)
+
+.PHONY: test4-1
+test4-1: clean-rendered
+	(cd examples && cat krm-metrics-server.yaml | ../helm2yaml.py -l DEBUG --render-path ../rendered krm -f -)
+
+# This uses OCI
+.PHONY: test5-1
+test5-1: clean-rendered
+	(cd examples && cat krm-metacontroller.yaml | ../helm2yaml.py -l DEBUG --render-path ../rendered krm -f -)
+
+# This example have a non-standard tar file name
+.PHONY: test6-1
+test6-1: clean-rendered
+	(cd examples && cat krm-flannel.yaml | ../helm2yaml.py -l DEBUG --render-path ../rendered krm -f -)

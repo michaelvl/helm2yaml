@@ -269,6 +269,17 @@ def helm_fetch_chart(app, args, chartdir, tmpdir):
         out = subprocess.check_output(cmd, shell=True)
         logging.debug(out)
 
+    # Rename if chart does not follow common format as encoded in 'chart'
+    if not os.path.exists(chart):
+        logging.debug("No file '{}' found after pull into {}".format(chart, chartdir))
+        options = os.listdir(chartdir)
+        logging.debug("Chart options: {}".format(options))
+        if len(options) == 1:
+            logging.info("Normalizing chart file from {} to {}".format(options[0], chart))
+            os.rename(chartdir+"/"+options[0], chart)
+        else:
+            logging.info("Dont know which file to use to normalize chart name: {}".format(options))
+
     cmd = 'tar -xzf {} --directory {}'.format(chart, tmpdir)
     logging.debug('Tar command: {}'.format(cmd))
     out = subprocess.check_output(cmd, shell=True)
