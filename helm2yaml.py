@@ -224,7 +224,6 @@ class PatchedFullLoader(yaml.FullLoader):
 def yaml2dict(app):
     res_out = []
     for res in app.split('\n---\n'):
-        res = string.Template(res).safe_substitute(os.environ)
         res = yaml.load(res, Loader=PatchedFullLoader)
         if res:
             res_out.append(res)
@@ -555,7 +554,7 @@ def main():
     parser_fluxcd.set_defaults(func=do_flux)
     parser_krm = subparsers.add_parser('krm')
     parser_krm.set_defaults(func=do_krm)
-    
+
     parser_helmsman.add_argument('-f', dest='helmsman', action='append', default=[])
     parser_helmsman.add_argument('--apply', default=False, dest='helmsman_apply', action='store_true', help='Dummy, for compatibility with Helmsman')
     parser_helmsman.add_argument('--no-banner', action='store_true', help='Dummy, for compatibility with Helmsman')
